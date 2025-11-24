@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 pb-24">
+    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        Mon Profil
+    </h1>
+
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="flex flex-col items-center mb-6">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-4xl font-bold mb-4">
+                    {% if user.first_name and user.last_name %}
+                        {{ user.first_name|first }}{{ user.last_name|first }}
+                    {% else %}
+                        {{ user.username|first|upper }}
+                    {% endif %}
+                </div>
+                <h2 class="text-2xl font-bold">{{ user.get_full_name|default:user.username }}</h2>
+                <p class="text-gray-600">{{ user.email }}</p>
+            </div>
+
+            {% if user.student %}
+            <div class="space-y-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">📚 Formation</label>
+                    <p class="text-gray-900 font-semibold">{{ user.student.program|default:"Non renseigné" }}</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🎓 Année</label>
+                    <p class="text-gray-900 font-semibold">{{ user.student.year|default:"Non renseignée" }}</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">💼 Compétences</label>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        {% if user.student.skills.all %}
+                            {% for skill in user.student.skills.all %}
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {{ skill.name }}
+                            </span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-gray-500 text-sm">Aucune compétence ajoutée</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">🎯 Préférences</label>
+                    <p class="text-gray-900">{{ user.student.preferences|default:"Non renseignées" }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center text-gray-500 py-8">
+                <p>Profil étudiant non configuré</p>
+            </div>
+            {% endif %}
+
+            <button class="w-full mt-6 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold shadow-lg hover:shadow-xl">
+                ✏️ Modifier mon profil
+            </button>
+            
+            <a href="/admin/" class="block w-full mt-3 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-semibold text-center">
+                ⚙️ Administration
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

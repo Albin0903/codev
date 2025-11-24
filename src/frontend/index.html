@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>JobFair Connect</title>
+    <meta name="description" content="JobFair Connect App" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#0d69f2',
+              'primary-light': '#F0EEFF',
+              'primary-dark': '#372E75',
+              'background-light': '#f5f7f8',
+              'background-dark': '#101722',
+              'card-dark': 'rgba(30, 41, 59, 0.6)',
+              'card-light': 'rgba(255, 255, 255, 0.6)',
+              'border-dark': 'rgba(51, 65, 85, 0.4)',
+              'border-light': 'rgba(255, 255, 255, 0.8)',
+            },
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+              display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            },
+            boxShadow: {
+              glass: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .material-symbols-outlined.fill {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .bg-gradient-blur {
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+            radial-gradient(at 20% 15%, hsla(280, 80%, 80%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 80% 25%, hsla(220, 80%, 75%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 25% 80%, hsla(180, 80%, 70%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 75% 90%, hsla(340, 80%, 80%, 0.3) 0px, transparent 50%);
+        filter: blur(80px);
+      }
+      .dark .bg-gradient-blur {
+        background-image:
+            radial-gradient(at 20% 15%, hsla(280, 80%, 40%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 80% 25%, hsla(220, 80%, 50%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 25% 80%, hsla(180, 80%, 40%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 75% 90%, hsla(340, 80%, 60%, 0.3) 0px, transparent 50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Forum Alternance Connect{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.7;
+            animation: float 20s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .card-exit-right {
+            animation: exitRight 0.3s ease-out forwards;
+        }
+        .card-exit-left {
+            animation: exitLeft 0.3s ease-out forwards;
+        }
+        @keyframes exitRight {
+            to { transform: translateX(100vw) rotate(20deg); opacity: 0; }
+        }
+        @keyframes exitLeft {
+            to { transform: translateX(-100vw) rotate(-20deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="blob bg-purple-400 w-96 h-96 top-0 left-0"></div>
+        <div class="blob bg-blue-400 w-80 h-80 bottom-0 right-0" style="animation-delay: -5s"></div>
+        <div class="blob bg-pink-400 w-72 h-72 top-1/2 left-1/2" style="animation-delay: -10s"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="relative z-10">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bottom Navigation -->
+    {% block navigation %}
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-200 z-50">
+        <div class="flex justify-around items-center h-20">
+            <a href="{% url 'core:swipe' %}" class="flex flex-col items-center gap-1 px-6 py-2 {% if request.resolver_match.url_name == 'swipe' %}text-purple-600{% else %}text-gray-400 hover:text-purple-400{% endif %} transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 3.22l-.61-.6a5.5 5.5 0 0 0-7.78 7.77L10 18.78l8.39-8.4a5.5 5.5 0 0 0-7.78-7.77l-.61.61z"/>
+                </svg>
+                <span class="text-xs font-medium">Swipe</span>
+            </a>
+            <a href="{% url 'core:matches' %}" class="flex flex-col items-center gap-1 px-6 py-2 {% if request.resolver_match.url_name == 'matches' %}text-purple-600{% else %}text-gray-400 hover:text-purple-400{% endif %} transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                </svg>
+                <span class="text-xs font-medium">Matchs</span>
+            </a>
+            <a href="{% url 'core:schedule' %}" class="flex flex-col items-center gap-1 px-6 py-2 {% if request.resolver_match.url_name == 'schedule' %}text-purple-600{% else %}text-gray-400 hover:text-purple-400{% endif %} transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
+                </svg>
+                <span class="text-xs font-medium">Planning</span>
+            </a>
+            <a href="{% url 'core:profile' %}" class="flex flex-col items-center gap-1 px-6 py-2 {% if request.resolver_match.url_name == 'profile' %}text-purple-600{% else %}text-gray-400 hover:text-purple-400{% endif %} transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                </svg>
+                <span class="text-xs font-medium">Profil</span>
+            </a>
+        </div>
+    </nav>
+    {% endblock %}
+</body>
+</html>

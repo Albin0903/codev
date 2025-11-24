@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 pb-24">
+    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        Découvrir les entreprises 💼
+    </h1>
+
+    <div id="card-stack" class="relative h-[600px] flex items-center justify-center">
+        <!-- Les cartes seront chargées ici via HTMX -->
+        <div hx-get="{% url 'core:next_card' %}" 
+             hx-trigger="load" 
+             hx-swap="innerHTML"
+             class="w-full max-w-md">
+            <div class="text-center text-gray-500">Chargement...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleSwipe(cardId, direction) {
+        const card = document.getElementById(`card-${cardId}`);
+        
+        // Animation de sortie
+        if (direction === 'right') {
+            card.classList.add('card-exit-right');
+        } else {
+            card.classList.add('card-exit-left');
+        }
+        
+        // Envoyer le swipe au serveur après l'animation
+        setTimeout(() => {
+            fetch(`/api/swipe/${cardId}/${direction}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Charger la prochaine carte
+                    htmx.ajax('GET', '{% url "core:next_card" %}', {
+                        target: '#card-stack > div',
+                        swap: 'innerHTML'
+                    });
+                }
+            });
+        }, 300);
+    }
+</script>
+{% endblock %}

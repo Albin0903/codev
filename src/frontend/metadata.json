@@ -1,0 +1,5 @@
+{
+  "name": "JobFair Connect",
+  "description": "A mobile-first web application for job fairs allowing candidates to swipe through opportunities, manage their schedule, and view their profile.",
+  "requestFramePermissions": []
+}
