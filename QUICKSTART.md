@@ -1,92 +1,185 @@
-# 🚀 Démarrage Rapide (Quickstart)
+# 🚀 Démarrage Rapide
 
-Ce guide vous permet de lancer le projet **JobFair Connect** en quelques minutes sur votre machine locale.
+Guide pour lancer **JobFair Connect** sur votre machine.
 
 ---
 
 ## 📋 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
-1.  **Docker Desktop** (et qu'il est lancé).
-2.  **Node.js** (version 18 ou supérieure).
-3.  **Git**.
+1. **Docker Desktop** (doit être démarré)
+2. **Node.js** v18+ ([télécharger](https://nodejs.org/))
+3. **Git**
 
 ---
 
-## 🏁 Initialisation (Première fois)
+## 🎯 Installation (Première fois uniquement)
 
-### 1. Récupérer le projet
+### 1. Cloner le projet
+
+<details open>
+<summary><b>🪟 PowerShell / CMD (Windows)</b></summary>
+
+```powershell
+git clone https://github.com/Albin0903/codev.git
+cd codev
+```
+</details>
+
+<details>
+<summary><b>🐧 Bash (WSL / Linux / macOS)</b></summary>
+
 ```bash
 git clone https://github.com/Albin0903/codev.git
 cd codev
 ```
+</details>
 
-### 2. Lancer le Backend (Docker)
-Cette commande va construire les images et lancer la base de données et le serveur Django.
+### 2. Démarrer le backend
+
+**Les commandes Docker sont identiques sur tous les systèmes :**
 ```bash
 docker compose up -d --build
 ```
 
-### 3. Initialiser la Base de Données
-Une fois les conteneurs lancés, préparez la base de données :
+### 3. Initialiser la base de données
 ```bash
-# Appliquer les migrations (création des tables)
 docker compose exec web python manage.py migrate
-
-# (Optionnel) Charger des données de démo
 docker compose exec web python manage.py setup_demo
 ```
-> *Le script `setup_demo` crée un utilisateur étudiant (`etudiant@test.com` / `test123`) et quelques entreprises.*
+> ✅ Créé un compte test : `etudiant@test.com` / `test123`
 
-### 4. Lancer le Frontend (React)
-Ouvrez un **nouveau terminal**, allez dans le dossier frontend et lancez le serveur de développement :
+### 4. Installer et lancer le frontend
+
+**Ouvrir un nouveau terminal :**
+
+<details open>
+<summary><b>🪟 PowerShell / CMD (Windows)</b></summary>
+
+```powershell
+cd src\frontend
+npm install
+npm run dev
+```
+</details>
+
+<details>
+<summary><b>🐧 Bash (WSL / Linux / macOS)</b></summary>
+
 ```bash
 cd src/frontend
 npm install
 npm run dev
 ```
+</details>
+
+**Application disponible sur :** http://localhost:3000
 
 ---
 
-## 🌍 Accéder à l'application
+## 🔄 Usage Quotidien
 
-*   📱 **Application Mobile** : http://localhost:3000
-*   ⚙️ **API Backend** : http://localhost:8000/api/
-*   🔑 **Administration** : http://localhost:8000/admin/
+### Démarrer le projet
 
----
-
-## 🔄 Utilisation Quotidienne
-
-Pour relancer le projet chaque matin, c'est plus simple :
-
-**Terminal 1 (Backend)**
+**Terminal 1 - Backend :**
 ```bash
 docker compose up -d
 ```
 
-**Terminal 2 (Frontend)**
+**Terminal 2 - Frontend :**
+
+<details open>
+<summary><b>🪟 PowerShell / CMD</b></summary>
+
+```powershell
+cd src\frontend
+npm run dev
+```
+</details>
+
+<details>
+<summary><b>🐧 Bash (WSL / Linux)</b></summary>
+
 ```bash
 cd src/frontend
 npm run dev
 ```
+</details>
 
-Pour arrêter le backend :
+### Arrêter le projet
 ```bash
 docker compose down
 ```
 
 ---
 
-## 💡 Commandes Utiles
+## 🔑 Comptes de test
 
-| Action | Commande |
-| :--- | :--- |
-| **Voir les logs Backend** | `docker compose logs -f web` |
-| **Créer un Admin** | `docker compose exec web python manage.py createsuperuser` |
-| **Créer une migration** | `docker compose exec web python manage.py makemigrations` |
-| **Appliquer les migrations** | `docker compose exec web python manage.py migrate` |
-| **Reset complet (DB)** | `docker compose down -v` (Attention : supprime tout !) |
-| **Shell Django** | `docker compose exec web python manage.py shell` |
+| Email | Mot de passe | Rôle |
+|-------|--------------|------|
+| `etudiant@test.com` | `test123` | Étudiant |
+| `admin@test.com` | `admin123` | Admin |
 
-📖 **Voir README.md pour la documentation complète**
+---
+
+## 💡 Commandes utiles
+
+**Les commandes Docker sont identiques sur tous les systèmes :**
+
+```bash
+# Voir les logs du serveur
+docker compose logs -f web
+
+# Appliquer les nouvelles migrations
+docker compose exec web python manage.py migrate
+
+# Réinitialiser les données de démo
+docker compose exec web python manage.py setup_demo
+
+# Reset complet (⚠️ supprime la base de données)
+docker compose down -v
+```
+
+---
+
+## 🐛 Problèmes fréquents
+
+**Erreur 500 au login ?**
+```bash
+docker compose exec web python manage.py migrate
+```
+
+**Port 3000 déjà utilisé ?**
+
+<details open>
+<summary><b>🪟 PowerShell</b></summary>
+
+```powershell
+# Trouver le processus
+netstat -ano | findstr :3000
+# Tuer le processus (remplacer PID par le numéro trouvé)
+taskkill /PID <PID> /F
+
+# OU utiliser npx
+npx kill-port 3000
+```
+</details>
+
+<details>
+<summary><b>🐧 Bash (WSL / Linux)</b></summary>
+
+```bash
+# Tuer le processus sur le port 3000
+lsof -ti:3000 | xargs kill -9
+
+# OU utiliser npx
+npx kill-port 3000
+```
+</details>
+
+**Docker ne démarre pas ?**
+- Vérifier que Docker Desktop est lancé
+- Redémarrer Docker Desktop
+
+---
+
+📖 **Documentation complète :** voir [README.md](README.md)
