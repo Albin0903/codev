@@ -117,7 +117,8 @@ docker compose down
 | Email | Mot de passe | Rôle |
 |-------|--------------|------|
 | `etudiant@test.com` | `test123` | Étudiant |
-| `admin@test.com` | `admin123` | Admin |
+| **Interface Admin Django** : http://localhost:8000/admin/ | | |
+| `admin` | `admin123` | Superadmin |
 
 ---
 

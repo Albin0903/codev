@@ -192,8 +192,8 @@ Ouvrez http://localhost:3000 dans votre navigateur (mode mobile dans DevTools).
 - **Mot de passe :** `test123`
 
 **Compte administrateur (pour accéder à http://localhost:8000/admin/) :**
-- **Username :** `root`
-- **Mot de passe :** `codev123`
+- **Username :** `admin`
+- **Mot de passe :** `admin123`
 - ⚠️ À créer manuellement : `docker compose exec web python manage.py createsuperuser`
 
 ---
@@ -234,7 +234,7 @@ Le script `setup_demo` crée automatiquement :
 |---------|-----|-------------|
 | **Application Mobile** | http://localhost:3000 | `etudiant@test.com` / `test123` |
 | **API Backend** | http://localhost:8000/api/ | Session auth via cookies |
-| **Admin Django** | http://localhost:8000/admin/ | `root` / `codev123` |
+| **Admin Django** | http://localhost:8000/admin/ | `admin` / `admin123` |
 | **API Browser** | http://localhost:8000/api/ | Interface navigable DRF |
 
 ---
