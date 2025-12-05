@@ -18,6 +18,14 @@ class Student(models.Model):
     hobbies = models.TextField(blank=True, verbose_name="Loisirs")
     theme = models.CharField(max_length=10, choices=[('light', 'Clair'), ('dark', 'Sombre')], default='dark', verbose_name="Thème")
     cv = models.FileField(upload_to='cvs/', blank=True, null=True, verbose_name="CV")
+    # Liens sociaux
+    linkedin_url = models.URLField(blank=True, null=True, verbose_name="Profil LinkedIn")
+    github_url = models.URLField(blank=True, null=True, verbose_name="Profil GitHub")
+    website_url = models.URLField(blank=True, null=True, verbose_name="Site personnel")
+    # Infos additionnelles
+    location = models.CharField(max_length=100, blank=True, verbose_name="Localisation")
+    languages = models.CharField(max_length=200, blank=True, verbose_name="Langues")
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

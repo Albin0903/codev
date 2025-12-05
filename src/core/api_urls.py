@@ -14,6 +14,7 @@ urlpatterns = [
     # API endpoints
     path('', include(router.urls)),
     path('me/', api_views.current_user, name='current-user'),
+    path('cv/', api_views.upload_cv, name='upload-cv'),
     path('login/', csrf_exempt(api_views.login_view), name='login'),
     path('logout/', api_views.logout_view, name='logout'),
 ]

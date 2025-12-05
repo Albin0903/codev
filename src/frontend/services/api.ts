@@ -145,6 +145,49 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch interviews');
     return response.json();
   },
+
+  // Upload CV (fichier PDF ou Word)
+  async uploadCV(file: File) {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const formData = new FormData();
+    formData.append('cv', file);
+    
+    const response = await fetch(`${API_BASE_URL}/cv/`, {
+      method: 'POST',
+      credentials: token ? 'omit' : 'include',
+      headers,
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to upload CV');
+    }
+    return response.json();
+  },
+
+  // Supprimer CV
+  async deleteCV() {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const response = await fetch(`${API_BASE_URL}/cv/`, {
+      method: 'DELETE',
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to delete CV');
+    }
+    return response.json();
+  },
+
   getToken,
   setToken,
 };

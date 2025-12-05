@@ -60,7 +60,13 @@ class Command(BaseCommand):
                 'education': 'Master 1 Informatique - Spécialité Web à Polytech Lyon. Formation complète en développement full-stack, architecture logicielle et gestion de projet agile.',
                 'experience': 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés. Participation à 3 hackathons avec 1er prix en 2023.',
                 'hobbies': 'Président du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.',
-                'theme': 'dark'
+                'theme': 'dark',
+                'linkedin_url': 'https://linkedin.com/in/marie-dupont',
+                'github_url': 'https://github.com/marie-dupont',
+                'website_url': 'https://marie-dupont.dev',
+                'location': 'Lyon, France',
+                'languages': 'Français, Anglais, Espagnol',
+                'phone': '+33 6 12 34 56 78'
             }
         )
         if created:
@@ -79,8 +85,18 @@ class Command(BaseCommand):
             student.experience = 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés. Participation à 3 hackathons avec 1er prix en 2023.'
             student.hobbies = 'Président du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.'
             student.theme = 'dark'
+            student.linkedin_url = 'https://linkedin.com/in/marie-dupont'
+            student.github_url = 'https://github.com/marie-dupont'
+            student.website_url = 'https://marie-dupont.dev'
+            student.location = 'Lyon, France'
+            student.languages = 'Français, Anglais, Espagnol'
+            student.phone = '+33 6 12 34 56 78'
+            # Reset CV pour les démos
+            if student.cv:
+                student.cv.delete(save=False)
+            student.cv = None
             student.save()
-            self.stdout.write(self.style.SUCCESS('  ✓ Champs du profil mis à jour'))
+            self.stdout.write(self.style.SUCCESS('  ✓ Champs du profil mis à jour (CV réinitialisé)'))
 
         # 3. Créer des compétences
         self.stdout.write('🎯 Création des compétences...')

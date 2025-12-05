@@ -141,7 +141,7 @@ def current_user(request):
         return Response({'error': 'Student profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = StudentSerializer(student)
+        serializer = StudentSerializer(student, context={'request': request})
         return Response(serializer.data)
 
     # PATCH
@@ -199,7 +199,7 @@ def current_user(request):
                 pass
 
         # re-serialize to include fresh related user and skills data
-        return Response(StudentSerializer(inst).data)
+        return Response(StudentSerializer(inst, context={'request': request}).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -252,3 +252,70 @@ def logout_view(request):
     """Endpoint de déconnexion"""
     logout(request)
     return Response({'message': 'Successfully logged out'})
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def upload_cv(request):
+    """POST: Upload un CV (fichier PDF)
+       DELETE: Supprime le CV existant
+    """
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        return Response({'error': 'Student profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if student.cv:
+            # Supprimer le fichier physique
+            student.cv.delete(save=True)
+            return Response({'message': 'CV supprimé avec succès'})
+        return Response({'error': 'Aucun CV à supprimer'}, status=status.HTTP_404_NOT_FOUND)
+
+    # POST - Upload
+    if 'cv' not in request.FILES:
+        return Response({'error': 'Aucun fichier fourni'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    cv_file = request.FILES['cv']
+    
+    # Validation du type de fichier
+    allowed_types = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if cv_file.content_type not in allowed_types:
+        return Response(
+            {'error': 'Format non supporté. Utilisez PDF ou Word (.doc, .docx)'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validation de la taille (max 5MB)
+    max_size = 5 * 1024 * 1024  # 5MB
+    if cv_file.size > max_size:
+        return Response(
+            {'error': 'Fichier trop volumineux. Maximum 5MB.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Parser le CV pour extraire les informations
+    extracted_data = {}
+    try:
+        from .cv_parser import parse_cv
+        extracted_data = parse_cv(cv_file, cv_file.content_type)
+        cv_file.seek(0)  # Reset file pointer après parsing
+    except Exception as e:
+        print(f"Erreur parsing CV: {e}")
+        # Continue même si le parsing échoue
+    
+    # Supprimer l'ancien CV s'il existe
+    if student.cv:
+        student.cv.delete(save=False)
+    
+    # Sauvegarder le nouveau CV (sans appliquer automatiquement les données extraites)
+    # L'utilisateur choisira s'il veut appliquer les données via la modal d'import
+    student.cv = cv_file
+    student.save()
+    
+    # Retourner les infos mises à jour avec les données extraites
+    from .serializers import StudentSerializer
+    serializer = StudentSerializer(student, context={'request': request})
+    response_data = serializer.data
+    response_data['extracted_from_cv'] = extracted_data  # Inclure les données extraites pour la modal
+    return Response(response_data, status=status.HTTP_200_OK)

@@ -9,6 +9,11 @@ const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [uploadingCV, setUploadingCV] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{show: boolean, title: string, message: string, onConfirm: () => void} | null>(null);
+  const [cvExtractedData, setCvExtractedData] = useState<any>(null);
+  const [showCvImportModal, setShowCvImportModal] = useState(false);
+  const cvInputRef = React.useRef<HTMLInputElement>(null);
 
   // toggle body class so we can hide the bottom nav and prevent background interactions
   useEffect(() => {
@@ -47,6 +52,12 @@ const ProfileScreen: React.FC = () => {
           year: data?.year || '',
           gender: data?.gender || '',
           preferences: data?.preferences || '',
+          linkedin_url: data?.linkedin_url || '',
+          github_url: data?.github_url || '',
+          website_url: data?.website_url || '',
+          location: data?.location || '',
+          languages: data?.languages || '',
+          phone: data?.phone || '',
         });
       } catch (error) {
         console.error('Erreur lors du chargement du profil:', error);
@@ -105,6 +116,12 @@ const ProfileScreen: React.FC = () => {
               hobbies: userData?.hobbies || '',
               theme: userData?.theme || 'dark',
               skills: userData?.skills ? userData.skills.map((s: any) => s.name) : [],
+              linkedin_url: userData?.linkedin_url || '',
+              github_url: userData?.github_url || '',
+              website_url: userData?.website_url || '',
+              location: userData?.location || '',
+              languages: userData?.languages || '',
+              phone: userData?.phone || '',
             }); 
           }}
         >
@@ -148,16 +165,293 @@ const ProfileScreen: React.FC = () => {
             {/* Social Actions Bar */}
             <div className="relative mb-8 px-2">
                 <div className="flex justify-center gap-3 items-center flex-wrap">
-                    <SocialButton href="#" iconSvg={<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>} />
-                    <SocialButton href="#" iconSvg={<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>} />
-                    <SocialButton href="#" iconName="public" />
+                    <SocialButton href={userData.linkedin_url || '#'} disabled={!userData.linkedin_url} iconSvg={<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>} />
+                    <SocialButton href={userData.github_url || '#'} disabled={!userData.github_url} iconSvg={<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>} />
+                    <SocialButton href={userData.website_url || '#'} disabled={!userData.website_url} iconName="public" />
                     <div className="w-px bg-white/10 mx-1 h-8"></div>
-                    <button className="h-10 px-4 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
-                        <span className="material-symbols-outlined text-[18px]">description</span>
-                        CV
-                    </button>
+                    {/* Hidden file input */}
+                    <input 
+                      type="file" 
+                      ref={cvInputRef}
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingCV(true);
+                        try {
+                          const updated = await api.uploadCV(file);
+                          setUserData(updated);
+                          // Stocker les données extraites pour affichage
+                          if (updated.extracted_from_cv) {
+                            setCvExtractedData(updated.extracted_from_cv);
+                          }
+                        } catch (err: any) {
+                          setConfirmModal({
+                            show: true,
+                            title: 'Erreur',
+                            message: err.message || 'Erreur lors de l\'upload du CV',
+                            onConfirm: () => setConfirmModal(null)
+                          });
+                        } finally {
+                          setUploadingCV(false);
+                          if (cvInputRef.current) cvInputRef.current.value = '';
+                        }
+                      }}
+                    />
+                    {/* CV Button with upload/view/delete */}
+                    {userData.cv_url ? (
+                      <div className="flex items-center gap-1">
+                        <a 
+                          href={userData.cv_url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="h-10 px-4 rounded-l-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 hover:from-emerald-600 hover:to-teal-600 transition-colors shadow-lg shadow-emerald-500/20"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">description</span>
+                          <span className="max-w-[80px] truncate">{userData.cv_name || 'CV'}</span>
+                        </a>
+                        <button 
+                          onClick={() => cvInputRef.current?.click()}
+                          disabled={uploadingCV}
+                          className="h-10 px-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white flex items-center justify-center hover:from-teal-600 hover:to-cyan-600 transition-colors"
+                          title="Remplacer le CV"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">{uploadingCV ? 'hourglass_empty' : 'upload'}</span>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setConfirmModal({
+                              show: true,
+                              title: 'Supprimer le CV',
+                              message: 'Êtes-vous sûr de vouloir supprimer votre CV ?',
+                              onConfirm: async () => {
+                                try {
+                                  await api.deleteCV();
+                                  setUserData((prev: any) => ({...prev, cv: null, cv_url: null, cv_name: null}));
+                                  setCvExtractedData(null);
+                                  setConfirmModal(null);
+                                } catch (err: any) {
+                                  console.error('Delete CV error:', err);
+                                  setConfirmModal({
+                                    show: true,
+                                    title: 'Erreur',
+                                    message: err.message || 'Erreur lors de la suppression',
+                                    onConfirm: () => setConfirmModal(null)
+                                  });
+                                }
+                              }
+                            });
+                          }}
+                          className="h-10 px-2 rounded-r-xl bg-gradient-to-r from-red-500/80 to-rose-500/80 text-white flex items-center justify-center hover:from-red-600 hover:to-rose-600 transition-colors"
+                          title="Supprimer le CV"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => cvInputRef.current?.click()}
+                        disabled={uploadingCV}
+                        className="h-10 px-4 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
+                      >
+                        {uploadingCV ? (
+                          <>
+                            <span className="material-symbols-outlined text-[18px] animate-spin">hourglass_empty</span>
+                            Upload...
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                            Ajouter CV
+                          </>
+                        )}
+                      </button>
+                    )}
                 </div>
             </div>
+
+            {/* CV Extracted Data - Action Button */}
+            {cvExtractedData && Object.keys(cvExtractedData).length > 0 && (
+              <div className="mb-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-violet-400/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-violet-400">auto_awesome</span>
+                  <span className="text-violet-300 font-bold text-sm">CV analysé avec succès !</span>
+                  <button 
+                    onClick={() => setCvExtractedData(null)}
+                    className="ml-auto text-slate-400 hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+                <p className="text-slate-400 text-xs mb-3">
+                  Des informations ont été extraites de votre CV. Voulez-vous les utiliser pour mettre à jour votre profil ?
+                </p>
+                <button
+                  onClick={() => setShowCvImportModal(true)}
+                  className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold text-sm hover:from-violet-600 hover:to-fuchsia-600 transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">sync</span>
+                  Mettre à jour le profil depuis le CV
+                </button>
+              </div>
+            )}
+
+            {/* CV Import Modal */}
+            {showCvImportModal && cvExtractedData && createPortal(
+              <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
+                <div className="bg-[#1e293b] rounded-2xl mx-4 max-w-md w-full max-h-[85%] flex flex-col border border-white/10 shadow-2xl overflow-hidden">
+                  {/* Header */}
+                  <div className="p-5 border-b border-white/5 shrink-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-violet-400">description</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">Importer depuis le CV</h3>
+                        <p className="text-slate-400 text-xs">Sélectionnez les champs à mettre à jour</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-5">
+                    <div className="space-y-3">
+                      {/* Define all fields to check */}
+                      {[
+                        { key: 'linkedin_url', label: 'LinkedIn', icon: 'link', color: 'blue' },
+                        { key: 'github_url', label: 'GitHub', icon: 'code', color: 'slate' },
+                        { key: 'website_url', label: 'Site web', icon: 'public', color: 'cyan' },
+                        { key: 'phone', label: 'Téléphone', icon: 'phone', color: 'amber' },
+                        { key: 'location', label: 'Localisation', icon: 'location_on', color: 'pink' },
+                        { key: 'languages', label: 'Langues', icon: 'translate', color: 'violet' },
+                        { key: 'education', label: 'Éducation', icon: 'school', color: 'blue' },
+                        { key: 'experience', label: 'Expérience', icon: 'work', color: 'amber' },
+                        { key: 'skills', label: 'Compétences', icon: 'psychology', color: 'cyan' },
+                      ].map((field) => {
+                        const hasValue = field.key === 'skills' 
+                          ? cvExtractedData.skills && cvExtractedData.skills.length > 0
+                          : !!cvExtractedData[field.key];
+                        const value = field.key === 'skills'
+                          ? cvExtractedData.skills?.join(', ')
+                          : cvExtractedData[field.key];
+                        
+                        return (
+                          <div 
+                            key={field.key} 
+                            className={`p-3 rounded-xl border ${
+                              hasValue 
+                                ? 'bg-emerald-500/10 border-emerald-400/30' 
+                                : 'bg-red-500/10 border-red-400/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`material-symbols-outlined text-sm ${hasValue ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {hasValue ? 'check_circle' : 'error'}
+                              </span>
+                              <span className={`text-xs font-bold uppercase tracking-wide ${hasValue ? 'text-emerald-300' : 'text-red-300'}`}>
+                                {field.label}
+                              </span>
+                              {!hasValue && (
+                                <span className="ml-auto text-[10px] text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full">
+                                  Non trouvé
+                                </span>
+                              )}
+                            </div>
+                            {hasValue ? (
+                              <p className="text-slate-300 text-xs truncate pl-6">{value}</p>
+                            ) : (
+                              <p className="text-slate-500 text-xs italic pl-6">Aucune donnée extraite du CV</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-5 border-t border-white/5 shrink-0 space-y-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          // Build payload with extracted data
+                          const payload: any = {};
+                          
+                          if (cvExtractedData.linkedin_url) payload.linkedin_url = cvExtractedData.linkedin_url;
+                          if (cvExtractedData.github_url) payload.github_url = cvExtractedData.github_url;
+                          if (cvExtractedData.website_url) payload.website_url = cvExtractedData.website_url;
+                          if (cvExtractedData.phone) payload.phone = cvExtractedData.phone;
+                          if (cvExtractedData.location) payload.location = cvExtractedData.location;
+                          if (cvExtractedData.languages) payload.languages = cvExtractedData.languages;
+                          if (cvExtractedData.education) payload.education = cvExtractedData.education;
+                          if (cvExtractedData.experience) payload.experience = cvExtractedData.experience;
+                          if (cvExtractedData.skills && cvExtractedData.skills.length > 0) {
+                            payload.skills = cvExtractedData.skills;
+                          }
+
+                          const updated = await api.updateCurrentUser(payload);
+                          setUserData(updated);
+                          setShowCvImportModal(false);
+                          setCvExtractedData(null);
+                          
+                          // Show success
+                          setConfirmModal({
+                            show: true,
+                            title: 'Profil mis à jour !',
+                            message: 'Les informations de votre CV ont été importées avec succès.',
+                            onConfirm: () => setConfirmModal(null)
+                          });
+                        } catch (err) {
+                          console.error('Erreur import CV:', err);
+                          setConfirmModal({
+                            show: true,
+                            title: 'Erreur',
+                            message: 'Impossible de mettre à jour le profil.',
+                            onConfirm: () => setConfirmModal(null)
+                          });
+                        }
+                      }}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined">check</span>
+                      Appliquer les modifications
+                    </button>
+                    <button
+                      onClick={() => setShowCvImportModal(false)}
+                      className="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.getElementById('app-modal-container') || document.body
+            )}
+            
+            {/* Confirm Modal Portal */}
+            {confirmModal?.show && createPortal(
+              <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-auto">
+                <div className="bg-[#1e293b] rounded-2xl p-6 mx-4 max-w-sm w-full border border-white/10 shadow-2xl">
+                  <h3 className="text-lg font-bold text-white mb-2">{confirmModal.title}</h3>
+                  <p className="text-slate-300 text-sm mb-6">{confirmModal.message}</p>
+                  <div className="flex gap-3 justify-end">
+                    <button 
+                      onClick={() => setConfirmModal(null)}
+                      className="px-4 py-2 rounded-lg bg-white/10 text-slate-300 font-medium hover:bg-white/20 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      onClick={confirmModal.onConfirm}
+                      className="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
+                    >
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.getElementById('app-modal-container') || document.body
+            )}
             
                     {/* Profile Edit Modal */}
                     {editingProfile && createPortal(
@@ -238,6 +532,46 @@ const ProfileScreen: React.FC = () => {
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Loisirs</label>
                               <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={2} value={formData.hobbies} onChange={(e) => setFormData({...formData, hobbies: e.target.value})} />
                             </div>
+                            
+                            {/* Section Liens sociaux */}
+                            <div className="col-span-1 md:col-span-2 pt-4 border-t border-white/5">
+                              <h4 className="text-sm font-bold text-violet-300 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">link</span>
+                                Liens & Réseaux sociaux
+                              </h4>
+                            </div>
+                            <div className="col-span-1 md:col-span-2">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-1.5">Profil LinkedIn</label>
+                              <input type="url" placeholder="https://linkedin.com/in/..." className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all" value={formData.linkedin_url} onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})} />
+                            </div>
+                            <div className="col-span-1 md:col-span-2">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">Profil GitHub</label>
+                              <input type="url" placeholder="https://github.com/..." className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-slate-300 focus:ring-1 focus:ring-slate-300 outline-none transition-all" value={formData.github_url} onChange={(e) => setFormData({...formData, github_url: e.target.value})} />
+                            </div>
+                            <div className="col-span-1 md:col-span-2">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5">Site personnel / Portfolio</label>
+                              <input type="url" placeholder="https://..." className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all" value={formData.website_url} onChange={(e) => setFormData({...formData, website_url: e.target.value})} />
+                            </div>
+                            
+                            {/* Section Infos complémentaires */}
+                            <div className="col-span-1 md:col-span-2 pt-4 border-t border-white/5">
+                              <h4 className="text-sm font-bold text-emerald-300 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">info</span>
+                                Informations complémentaires
+                              </h4>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-pink-400 mb-1.5">Localisation</label>
+                              <input placeholder="Lyon, France" className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-pink-400 focus:ring-1 focus:ring-pink-400 outline-none transition-all" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-violet-400 mb-1.5">Langues</label>
+                              <input placeholder="Français, Anglais" className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-violet-400 focus:ring-1 focus:ring-violet-400 outline-none transition-all" value={formData.languages} onChange={(e) => setFormData({...formData, languages: e.target.value})} />
+                            </div>
+                            <div className="col-span-1 md:col-span-2">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1.5">Téléphone</label>
+                              <input type="tel" placeholder="+33 6 12 34 56 78" className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+                            </div>
                           </div>
                         </div>
                           
@@ -260,6 +594,12 @@ const ProfileScreen: React.FC = () => {
                                   experience: formData.experience,
                                   hobbies: formData.hobbies,
                                   theme: formData.theme,
+                                  linkedin_url: formData.linkedin_url || '',
+                                  github_url: formData.github_url || '',
+                                  website_url: formData.website_url || '',
+                                  location: formData.location || '',
+                                  languages: formData.languages || '',
+                                  phone: formData.phone || '',
                                 };
                                 // include user fields to update separately
                                     if (formData.first_name !== undefined) payload['first_name'] = formData.first_name;
@@ -298,8 +638,8 @@ const ProfileScreen: React.FC = () => {
           {[
             { icon: 'calendar_today', label: 'Disponibilité', value: userData.availability || 'Non renseigné', gradient: 'from-emerald-500/20 to-cyan-500/20', border: 'border-emerald-400/30', iconColor: 'text-emerald-400' },
             { icon: 'hourglass_top', label: 'Durée', value: userData.duration || 'Non renseigné', gradient: 'from-orange-500/20 to-amber-500/20', border: 'border-orange-400/30', iconColor: 'text-orange-400' },
-            { icon: 'location_on', label: 'Localisation', value: 'Lyon, FR', gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-400/30', iconColor: 'text-pink-400' },
-            { icon: 'translate', label: 'Langues', value: 'FR, EN', gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-400/30', iconColor: 'text-violet-400' },
+            { icon: 'location_on', label: 'Localisation', value: userData.location || 'Non renseigné', gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-400/30', iconColor: 'text-pink-400' },
+            { icon: 'translate', label: 'Langues', value: userData.languages || 'Non renseigné', gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-400/30', iconColor: 'text-violet-400' },
           ].map((item, i) => (
             <div key={i} className={`bg-gradient-to-br ${item.gradient} rounded-xl p-3 border ${item.border} flex flex-col gap-1`}>
               <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
@@ -415,10 +755,17 @@ const ProfileScreen: React.FC = () => {
   );
 };
 
-const SocialButton = ({ href, iconSvg, iconName }: { href: string, iconSvg?: React.ReactNode, iconName?: string }) => (
+const SocialButton = ({ href, iconSvg, iconName, disabled }: { href: string, iconSvg?: React.ReactNode, iconName?: string, disabled?: boolean }) => (
     <a 
-        href={href} 
-        className="h-10 w-10 rounded-xl bg-[#101722]/80 text-slate-400 flex items-center justify-center hover:bg-white hover:text-[#101722] transition-all duration-300 border border-white/10 shadow-lg"
+        href={disabled ? undefined : href}
+        target={disabled ? undefined : "_blank"}
+        rel="noreferrer"
+        className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 border border-white/10 shadow-lg ${
+          disabled 
+            ? 'bg-[#101722]/40 text-slate-600 cursor-not-allowed opacity-50' 
+            : 'bg-[#101722]/80 text-slate-400 hover:bg-white hover:text-[#101722] cursor-pointer'
+        }`}
+        onClick={(e) => disabled && e.preventDefault()}
     >
         {iconSvg ? (
              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">{iconSvg}</svg>

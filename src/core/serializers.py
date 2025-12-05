@@ -18,10 +18,27 @@ class SkillSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
+    cv_url = serializers.SerializerMethodField()
+    cv_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Student
-        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'hobbies', 'theme', 'cv', 'skills', 'created_at']
+        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'hobbies', 'theme', 'cv', 'cv_url', 'cv_name', 'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'skills', 'created_at']
+    
+    def get_cv_url(self, obj):
+        """Retourne l'URL absolue du CV si présent"""
+        if obj.cv:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cv.url)
+            return obj.cv.url
+        return None
+    
+    def get_cv_name(self, obj):
+        """Retourne le nom du fichier CV"""
+        if obj.cv:
+            return obj.cv.name.split('/')[-1]
+        return None
 
 
 class CompanySerializer(serializers.ModelSerializer):

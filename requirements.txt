@@ -4,3 +4,5 @@ networkx
 Pillow
 djangorestframework
 django-cors-headers
+pdfplumber
+python-docx
