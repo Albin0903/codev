@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 
 export const BottomNavigation: React.FC = () => {
-  const navItems = [
-    { path: '/profile', icon: 'person', label: 'Profil' },
-    { path: '/swipe', icon: 'swipe', label: 'Swipe', isMain: true },
-    { path: '/schedule', icon: 'calendar_month', label: 'Planning', hasNotification: true },
-  ];
+  const userType = useMemo(() => {
+    try { return sessionStorage.getItem('jobfair_user_type'); } catch { return null; }
+  }, []);
+
+  const navItems = userType === 'company'
+    ? [
+        { path: '/company/profile', icon: 'business_center', label: 'Profil' },
+        { path: '/company/swipe', icon: 'swipe', label: 'Swipe', isMain: true },
+        { path: '/company/matches', icon: 'calendar_month', label: 'Planning', hasNotification: true },
+      ]
+    : [
+        { path: '/profile', icon: 'person', label: 'Profil' },
+        { path: '/swipe', icon: 'swipe', label: 'Swipe', isMain: true },
+        { path: '/schedule', icon: 'calendar_month', label: 'Planning', hasNotification: true },
+      ];
 
   return (
     <div className="mx-auto max-w-[20rem] bottom-nav">

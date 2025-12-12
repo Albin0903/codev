@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Réinitialiser la base de données</h1>
+    
+    <div class="module" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 20px; margin: 20px 0;">
+        <h2 style="color: #856404; margin-top: 0;">⚠️ Attention</h2>
+        <p style="color: #856404; margin-bottom: 0;">
+            Cette action va <strong>supprimer</strong> tous les matchs, swipes, entretiens et offres de stage.
+            <br><br>
+            Les profils étudiants et entreprises seront préservés.
+            <br><br>
+            <strong>Cette action est irréversible !</strong>
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin: 20px 0;">
+            <button type="submit" class="button default" style="background-color: #dc3545; border-color: #dc3545;">
+                Réinitialiser la DB
+            </button>
+            <a href="{% url 'admin:index' %}" class="button" style="margin-left: 10px;">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

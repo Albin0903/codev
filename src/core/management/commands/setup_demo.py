@@ -4,7 +4,7 @@ Usage: docker compose exec web python manage.py setup_demo
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from core.models import Student, Company, Skill, Match, Interview, Swipe
+from core.models import Student, Company, Skill, Match, Interview, Swipe, InternshipOffer
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -28,27 +28,24 @@ class Command(BaseCommand):
             admin.set_password('admin123')
             admin.save()
             
-        # 1. Créer un utilisateur étudiant
-        self.stdout.write('👤 Création de l\'utilisateur étudiant...')
-        user, created = User.objects.get_or_create(
-            username='etudiant',
-            defaults={
-                'email': 'etudiant@test.com',
-                'first_name': 'Marie',
-                'last_name': 'Dupont'
-            }
-        )
-        if created:
-            user.set_password('test123')
-            user.save()
-            self.stdout.write(self.style.SUCCESS('  ✓ Utilisateur créé: etudiant@test.com / test123'))
-        else:
-            self.stdout.write(self.style.WARNING('  ⚠ Utilisateur existe déjà'))
+        # 1. Créer les compétences d'abord
+        self.stdout.write('🎯 Création des compétences...')
+        skills_data = ['React', 'TypeScript', 'Python', 'Django', 'Node.js', 'Tailwind CSS', 'Git', 'Docker', 'PostgreSQL', 'AWS', 'Figma', 'Vue.js', 'Java', 'Kubernetes']
+        skills = {}
+        for skill_name in skills_data:
+            skill, _ = Skill.objects.get_or_create(name=skill_name)
+            skills[skill_name] = skill
+        self.stdout.write(self.style.SUCCESS(f'  ✓ {len(skills_data)} compétences créées'))
 
-        # 2. Créer le profil étudiant
-        student, created = Student.objects.get_or_create(
-            user=user,
-            defaults={
+        # 2. Créer 3 étudiants
+        self.stdout.write('👤 Création des 3 étudiants...')
+        students_data = [
+            {
+                'username': 'marie.dupont',
+                'email': 'marie.dupont@polytech.fr',
+                'password': 'test123',
+                'first_name': 'Marie',
+                'last_name': 'Dupont',
                 'school': 'Polytech Lyon',
                 'school_url': 'https://www.polytech-lyon.fr',
                 'program': 'Master Informatique - Spécialité Web',
@@ -58,138 +55,284 @@ class Command(BaseCommand):
                 'availability': 'Septembre 2024',
                 'duration': '12 mois',
                 'education': 'Master 1 Informatique - Spécialité Web à Polytech Lyon. Formation complète en développement full-stack, architecture logicielle et gestion de projet agile.',
-                'experience': 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés. Participation à 3 hackathons avec 1er prix en 2023.',
-                'hobbies': 'Président du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.',
-                'theme': 'dark',
+                'experience': 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés.',
+                'hobbies': 'Présidente du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.',
                 'linkedin_url': 'https://linkedin.com/in/marie-dupont',
                 'github_url': 'https://github.com/marie-dupont',
                 'website_url': 'https://marie-dupont.dev',
                 'location': 'Lyon, France',
                 'languages': 'Français, Anglais, Espagnol',
-                'phone': '+33 6 12 34 56 78'
-            }
-        )
-        if created:
-            self.stdout.write(self.style.SUCCESS('  ✓ Profil étudiant créé'))
-        else:
-            # Always update demo fields to ensure they are present even if student already exists
-            student.school = 'Polytech Lyon'
-            student.school_url = 'https://www.polytech-lyon.fr'
-            student.program = 'Master Informatique - Spécialité Web'
-            student.year = 'M1'
-            student.gender = 'F'
-            student.preferences = 'Passionnée par le développement web et mobile, je recherche une alternance pour mettre en pratique mes compétences en React, TypeScript et Django. Motivée et créative, j\'aime travailler en équipe sur des projets innovants.'
-            student.availability = 'Septembre 2024'
-            student.duration = '12 mois'
-            student.education = 'Master 1 Informatique - Spécialité Web à Polytech Lyon. Formation complète en développement full-stack, architecture logicielle et gestion de projet agile.'
-            student.experience = 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés. Participation à 3 hackathons avec 1er prix en 2023.'
-            student.hobbies = 'Président du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.'
-            student.theme = 'dark'
-            student.linkedin_url = 'https://linkedin.com/in/marie-dupont'
-            student.github_url = 'https://github.com/marie-dupont'
-            student.website_url = 'https://marie-dupont.dev'
-            student.location = 'Lyon, France'
-            student.languages = 'Français, Anglais, Espagnol'
-            student.phone = '+33 6 12 34 56 78'
-            # Reset CV pour les démos
-            if student.cv:
-                student.cv.delete(save=False)
-            student.cv = None
-            student.save()
-            self.stdout.write(self.style.SUCCESS('  ✓ Champs du profil mis à jour (CV réinitialisé)'))
+                'phone': '+33 6 12 34 56 78',
+                'photo_visible': True,
+                'skills': ['React', 'TypeScript', 'Python', 'Django', 'Git', 'Tailwind CSS'],
+            },
+            {
+                'username': 'lucas.martin',
+                'email': 'lucas.martin@insa.fr',
+                'password': 'test123',
+                'first_name': 'Lucas',
+                'last_name': 'Martin',
+                'school': 'INSA Lyon',
+                'school_url': 'https://www.insa-lyon.fr',
+                'program': 'Génie Informatique',
+                'year': 'M2',
+                'gender': 'M',
+                'preferences': 'Développeur backend passionné, je recherche un stage de fin d\'études pour perfectionner mes compétences en architecture distribuée et DevOps.',
+                'availability': 'Février 2025',
+                'duration': '6 mois',
+                'education': 'Master 2 Génie Informatique à l\'INSA Lyon. Spécialisation en systèmes distribués et cloud computing.',
+                'experience': 'Alternance de 2 ans chez Sopra Steria en tant que développeur Java/Spring. Développement de microservices pour le secteur bancaire.',
+                'hobbies': 'Contributeur open source, jeux vidéo compétitifs, course à pied.',
+                'linkedin_url': 'https://linkedin.com/in/lucas-martin-dev',
+                'github_url': 'https://github.com/lucas-martin',
+                'website_url': '',
+                'location': 'Villeurbanne, France',
+                'languages': 'Français, Anglais',
+                'phone': '+33 6 98 76 54 32',
+                'photo_visible': False,
+                'skills': ['Java', 'Python', 'Docker', 'Kubernetes', 'PostgreSQL', 'AWS'],
+            },
+            {
+                'username': 'emma.bernard',
+                'email': 'emma.bernard@epitech.eu',
+                'password': 'test123',
+                'first_name': 'Emma',
+                'last_name': 'Bernard',
+                'school': 'Epitech Lyon',
+                'school_url': 'https://www.epitech.eu',
+                'program': 'Tek4 - Expert en Technologies de l\'Information',
+                'year': 'M1',
+                'gender': 'F',
+                'preferences': 'Designer et développeuse frontend, je cherche à combiner mes compétences en UX/UI avec le développement d\'interfaces modernes.',
+                'availability': 'Avril 2025',
+                'duration': '4-6 mois',
+                'education': 'Epitech Lyon - 4ème année. Expérience internationale (1 an à Séoul). Spécialisation UX/UI et développement frontend.',
+                'experience': 'Stage de 6 mois chez Ubisoft Lyon en tant que UI Developer. Création d\'interfaces pour jeux mobiles.',
+                'hobbies': 'Design graphique, illustration digitale, voyages, photographie.',
+                'linkedin_url': 'https://linkedin.com/in/emma-bernard-ux',
+                'github_url': 'https://github.com/emma-b-design',
+                'website_url': 'https://emma-bernard.design',
+                'location': 'Lyon, France',
+                'languages': 'Français, Anglais, Coréen (notions)',
+                'phone': '+33 7 11 22 33 44',
+                'photo_visible': True,
+                'skills': ['React', 'Vue.js', 'TypeScript', 'Figma', 'Tailwind CSS', 'Git'],
+            },
+        ]
 
-        # 3. Créer des compétences
-        self.stdout.write('🎯 Création des compétences...')
-        skills_data = ['React', 'TypeScript', 'Python', 'Django', 'Node.js', 'Tailwind CSS', 'Git', 'Docker']
-        for skill_name in skills_data:
-            skill, _ = Skill.objects.get_or_create(name=skill_name)
-            student.skills.add(skill)
-        self.stdout.write(self.style.SUCCESS(f'  ✓ {len(skills_data)} compétences ajoutées'))
+        students = []
+        for student_data in students_data:
+            # Créer l'utilisateur
+            user, user_created = User.objects.get_or_create(
+                username=student_data['username'],
+                defaults={
+                    'email': student_data['email'],
+                    'first_name': student_data['first_name'],
+                    'last_name': student_data['last_name'],
+                }
+            )
+            if user_created:
+                user.set_password(student_data['password'])
+                user.save()
+                self.stdout.write(self.style.SUCCESS(f'  ✓ User créé: {student_data["username"]}'))
+            
+            # Créer le profil étudiant
+            student, created = Student.objects.get_or_create(
+                user=user,
+                defaults={
+                    'school': student_data['school'],
+                    'school_url': student_data['school_url'],
+                    'program': student_data['program'],
+                    'year': student_data['year'],
+                    'gender': student_data['gender'],
+                    'preferences': student_data['preferences'],
+                    'availability': student_data['availability'],
+                    'duration': student_data['duration'],
+                    'education': student_data['education'],
+                    'experience': student_data['experience'],
+                    'hobbies': student_data['hobbies'],
+                    'theme': 'dark',
+                    'linkedin_url': student_data['linkedin_url'],
+                    'github_url': student_data['github_url'],
+                    'website_url': student_data['website_url'],
+                    'location': student_data['location'],
+                    'languages': student_data['languages'],
+                    'phone': student_data['phone'],
+                    'photo_visible': student_data['photo_visible'],
+                }
+            )
+            
+            if not created:
+                # Mettre à jour tous les champs
+                for field in ['school', 'school_url', 'program', 'year', 'gender', 'preferences', 
+                              'availability', 'duration', 'education', 'experience', 'hobbies',
+                              'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'photo_visible']:
+                    setattr(student, field, student_data.get(field, getattr(student, field)))
+                student.save()
+            
+            # Ajouter les compétences
+            for skill_name in student_data['skills']:
+                if skill_name in skills:
+                    student.skills.add(skills[skill_name])
+            
+            students.append(student)
+            self.stdout.write(self.style.SUCCESS(f'  ✓ Profil étudiant: {student_data["first_name"]} {student_data["last_name"]}'))
 
-        # 4. Créer des entreprises
-        self.stdout.write('🏢 Création des entreprises...')
+        # 3. Créer 3 entreprises AVEC utilisateurs
+        self.stdout.write('🏢 Création des 3 entreprises...')
         companies_data = [
             {
+                'username': 'innovatech',
+                'email': 'contact@innovatech.com',
+                'password': 'test123',
                 'name': 'Innovatech Solutions',
                 'sector': 'Tech / SaaS',
                 'description': 'Startup innovante spécialisée dans le développement de solutions web modernes. Nous créons des applications qui changent la vie des utilisateurs.',
                 'website': 'https://innovatech.example.com',
                 'contact_email': 'recrutement@innovatech.com',
                 'contact_name': 'Sophie Martin',
+                'address': '123 Avenue de la Tech, Lyon',
+                'employees': 50,
+                'founded_year': 2018,
+                'benefits': 'Télétravail flexible, RTT, tickets restaurant, mutuelle premium',
             },
             {
+                'username': 'creativeminds',
+                'email': 'contact@creativeminds.com',
+                'password': 'test123',
                 'name': 'Creative Minds',
                 'sector': 'Design / UX',
                 'description': 'Agence de design récompensée, spécialisée dans l\'UX/UI et le branding. Nous créons des expériences utilisateur exceptionnelles.',
                 'website': 'https://creativeminds.example.com',
                 'contact_email': 'jobs@creativeminds.com',
                 'contact_name': 'Thomas Bernard',
+                'address': '45 Rue du Design, Lyon',
+                'employees': 25,
+                'founded_year': 2015,
+                'benefits': 'Environnement créatif, formation continue, prime d\'intéressement',
             },
             {
+                'username': 'dataflow',
+                'email': 'contact@dataflow.com',
+                'password': 'test123',
                 'name': 'DataFlow Analytics',
                 'sector': 'Data Science / IA',
                 'description': 'Leader en analyse de données et intelligence artificielle. Nous transformons les données en insights actionnables.',
                 'website': 'https://dataflow.example.com',
                 'contact_email': 'careers@dataflow.com',
                 'contact_name': 'Julie Rousseau',
+                'address': '78 Boulevard de la Data, Villeurbanne',
+                'employees': 120,
+                'founded_year': 2012,
+                'benefits': 'Salaire compétitif, participation, CE, salle de sport',
             },
         ]
 
         companies = []
         for company_data in companies_data:
+            # Créer l'utilisateur pour l'entreprise
+            company_user, user_created = User.objects.get_or_create(
+                username=company_data['username'],
+                defaults={
+                    'email': company_data['email'],
+                    'first_name': company_data['name'],
+                }
+            )
+            if user_created:
+                company_user.set_password(company_data['password'])
+                company_user.save()
+                self.stdout.write(self.style.SUCCESS(f'  ✓ User créé: {company_data["username"]}'))
+            
+            # Créer l'entreprise
             company, created = Company.objects.get_or_create(
                 name=company_data['name'],
-                defaults=company_data
+                defaults={
+                    'user': company_user,
+                    'sector': company_data['sector'],
+                    'description': company_data['description'],
+                    'website': company_data['website'],
+                    'contact_email': company_data['contact_email'],
+                    'contact_name': company_data['contact_name'],
+                    'address': company_data.get('address', ''),
+                    'employees': company_data.get('employees'),
+                    'founded_year': company_data.get('founded_year'),
+                    'benefits': company_data.get('benefits', ''),
+                }
             )
+            if not created and not company.user:
+                company.user = company_user
+                company.save()
+            
             companies.append(company)
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  ✓ Entreprise créée: {company.name}'))
 
-        # 5. Créer un match avec la première entreprise
-        self.stdout.write('💝 Création d\'un match...')
-        if companies:
-            # Créer un swipe "right" pour la première entreprise
-            Swipe.objects.get_or_create(
-                student=student,
-                company=companies[0],
-                defaults={'direction': 'right'}
+        # 4. Créer des offres de stage pour chaque entreprise
+        self.stdout.write('📝 Création des offres de stage...')
+        offers_data = [
+            {
+                'company_index': 0,
+                'title': 'Stage Développeur Full-Stack React/Django',
+                'description': 'Rejoignez notre équipe pour développer des applications web modernes.',
+                'location': 'Lyon (hybride)',
+                'duration': '6 mois',
+                'requirements': 'Connaissance de React, TypeScript. Python/Django est un plus.',
+            },
+            {
+                'company_index': 0,
+                'title': 'Stage DevOps Junior',
+                'description': 'Participez à la mise en place de notre infrastructure cloud.',
+                'location': 'Lyon',
+                'duration': '4-6 mois',
+                'requirements': 'Bases en Linux, intérêt pour le cloud.',
+            },
+            {
+                'company_index': 1,
+                'title': 'Stage UX/UI Designer',
+                'description': 'Création de maquettes et prototypes interactifs.',
+                'location': 'Lyon',
+                'duration': '6 mois',
+                'requirements': 'Maîtrise de Figma, portfolio requis.',
+            },
+            {
+                'company_index': 2,
+                'title': 'Stage Data Analyst',
+                'description': 'Analyse de données et création de dashboards.',
+                'location': 'Villeurbanne',
+                'duration': '6 mois',
+                'requirements': 'Python, SQL, statistiques.',
+            },
+        ]
+        
+        for offer_data in offers_data:
+            company = companies[offer_data['company_index']]
+            InternshipOffer.objects.get_or_create(
+                company=company,
+                title=offer_data['title'],
+                defaults={
+                    'description': offer_data['description'],
+                    'location': offer_data['location'],
+                    'duration': offer_data['duration'],
+                    'requirements': offer_data['requirements'],
+                }
             )
-            
-            match, created = Match.objects.get_or_create(
-                student=student,
-                company=companies[0],
-                defaults={'is_mutual': True}
-            )
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'  ✓ Match créé avec {companies[0].name}'))
-
-                # 6. Créer un entretien
-                tomorrow = timezone.now() + timedelta(days=1)
-                interview_time = tomorrow.replace(hour=14, minute=0, second=0, microsecond=0)
-                
-                Interview.objects.get_or_create(
-                    match=match,
-                    defaults={
-                        'time_slot': interview_time,
-                        'duration': 30,
-                        'room': 'Stand A23',
-                        'status': 'confirmed'
-                    }
-                )
-                self.stdout.write(self.style.SUCCESS('  ✓ Entretien programmé pour demain à 14h00'))
+        self.stdout.write(self.style.SUCCESS(f'  ✓ {len(offers_data)} offres créées'))
 
         # Résumé
         self.stdout.write('\n' + '='*50)
         self.stdout.write(self.style.SUCCESS('✅ DONNÉES DE DÉMO CRÉÉES AVEC SUCCÈS !'))
         self.stdout.write('='*50)
-        self.stdout.write('\n📋 Résumé:')
-        self.stdout.write(f'  • Utilisateur: etudiant@test.com')
-        self.stdout.write(f'  • Mot de passe: test123')
+        self.stdout.write('\n📋 Comptes Étudiants:')
+        for s in students_data:
+            self.stdout.write(f'  • {s["username"]} / test123 ({s["first_name"]} {s["last_name"]})')
+        self.stdout.write('\n📋 Comptes Entreprises:')
+        for c in companies_data:
+            self.stdout.write(f'  • {c["username"]} / test123 ({c["name"]})')
+        self.stdout.write('\n📋 Admin:')
+        self.stdout.write('  • admin / admin123')
+        self.stdout.write(f'\n📊 Statistiques:')
+        self.stdout.write(f'  • Étudiants: {len(students)}')
         self.stdout.write(f'  • Entreprises: {len(companies)}')
+        self.stdout.write(f'  • Offres de stage: {InternshipOffer.objects.count()}')
         self.stdout.write(f'  • Compétences: {len(skills_data)}')
-        self.stdout.write(f'  • Matchs: {Match.objects.filter(student=student).count()}')
-        self.stdout.write(f'  • Entretiens: {Interview.objects.filter(match__student=student).count()}')
-        self.stdout.write('\n🚀 Vous pouvez maintenant tester l\'application!')
-        self.stdout.write('  → Frontend: http://localhost:3000')
-        self.stdout.write('  → API: http://localhost:8000/api/')
-        self.stdout.write('  → Admin: http://localhost:8000/admin/')
+        self.stdout.write('\n🚀 Prêt à tester l\'application!')

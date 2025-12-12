@@ -15,12 +15,18 @@ interface JobCard {
   description: string;
   missions: string[];
   tools: string[];
+  // Champs additionnels pour "Voir plus"
+  sector?: string;
+  employees?: number;
+  benefits?: string;
+  founded_year?: number;
 }
 
 const SwipeScreen: React.FC = () => {
   const [currentCard, setCurrentCard] = useState<JobCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const navigate = useNavigate();
   const confettiContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -32,17 +38,22 @@ const SwipeScreen: React.FC = () => {
         // Transform API data to JobCard format
         const job: JobCard = {
           id: data.id,
-          title: 'Développeur Fullstack', // Placeholder as API might not return title yet
+          title: data.offers?.[0]?.title || 'Stage/Alternance',
           company: data.name,
           companyUrl: data.website,
-          logo: data.logo || 'https://via.placeholder.com/150',
-          location: 'Lyon (69)', // Placeholder
+            logo: data.logo_url || data.logo || '/assets/company-default.svg',
+          location: data.address || 'France',
           tags: ['#Tech', `#${data.sector}`],
           description: data.description,
-          missions: ['Développement', 'Conception', 'Test'], // Placeholder
-          tools: ['Git', 'Jira'] // Placeholder
+          missions: data.offers?.[0]?.description?.split('.').filter((s: string) => s.trim()).slice(0, 3) || ['Développement', 'Conception', 'Test'],
+          tools: ['Git', 'Jira'],
+          sector: data.sector,
+          employees: data.employees,
+          benefits: data.benefits,
+          founded_year: data.founded_year,
         };
         setCurrentCard(job);
+        setShowDetails(false);
       } else {
         setCurrentCard(null);
       }
@@ -88,9 +99,15 @@ const SwipeScreen: React.FC = () => {
           });
         }
         
-        // Optional: Delay navigation to show confetti
+        // Navigate avec les données du match
         setTimeout(() => {
-            navigate('/match');
+            navigate('/match', { 
+              state: { 
+                matchType: 'student',
+                companyName: currentCard.company,
+                companyLogo: currentCard.logo
+              } 
+            });
         }, 1500);
       } else {
         // Wait for animation to finish before fetching next card
@@ -112,7 +129,7 @@ const SwipeScreen: React.FC = () => {
 
   if (!currentCard) {
       return (
-          <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center">
+          <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center overflow-hidden">
               <span className="material-symbols-outlined text-6xl text-slate-600 mb-4">sentiment_satisfied</span>
               <h2 className="text-xl font-bold mb-2">C'est tout pour le moment !</h2>
               <p className="text-slate-400">Revenez plus tard pour découvrir de nouvelles entreprises.</p>
@@ -215,9 +232,95 @@ const SwipeScreen: React.FC = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Voir plus button */}
+            <button
+              onClick={() => setShowDetails(true)}
+              className="w-full py-3 mt-2 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-slate-300 text-sm font-medium transition flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">info</span>
+              Voir plus de détails
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Modal Voir Plus */}
+      {showDetails && currentCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#1E293B] rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl border border-white/10">
+            {/* Header */}
+            <div className="sticky top-0 bg-[#1E293B] border-b border-white/10 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={currentCard.logo} 
+                  alt="logo" 
+                  className="h-10 w-10 rounded-xl object-cover bg-white"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                    (e.currentTarget as HTMLImageElement).src = '/assets/company-default.svg';
+                  }}
+                />
+                <div>
+                  <h3 className="text-white font-bold">{currentCard.company}</h3>
+                  <p className="text-slate-400 text-xs">{currentCard.sector}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowDetails(false)}
+                className="p-2 rounded-full hover:bg-slate-700 transition"
+              >
+                <span className="material-symbols-outlined text-slate-400">close</span>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Infos clés */}
+              <div className="grid grid-cols-2 gap-3">
+                {currentCard.founded_year && (
+                  <div className="bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-slate-500 text-xs mb-1">Fondée en</p>
+                    <p className="text-white font-bold">{currentCard.founded_year}</p>
+                  </div>
+                )}
+                {currentCard.employees && (
+                  <div className="bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-slate-500 text-xs mb-1">Employés</p>
+                    <p className="text-white font-bold">{currentCard.employees}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description complète */}
+              <div>
+                <h4 className="text-slate-300 text-sm font-bold mb-2">Description</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">{currentCard.description}</p>
+              </div>
+
+              {/* Avantages */}
+              {currentCard.benefits && (
+                <div>
+                  <h4 className="text-slate-300 text-sm font-bold mb-2">Avantages</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{currentCard.benefits}</p>
+                </div>
+              )}
+
+              {/* Lien site */}
+              {currentCard.companyUrl && (
+                <a 
+                  href={currentCard.companyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-primary/20 hover:bg-primary/30 rounded-xl text-primary font-medium transition"
+                >
+                  <span className="material-symbols-outlined">open_in_new</span>
+                  Visiter le site web
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Buttons */}
       <div className="flex justify-center items-center gap-6 shrink-0 z-30 px-4">

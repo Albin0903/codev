@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { BottomNavigation } from './components/BottomNavigation';
 import { BackgroundBlobs } from './components/BackgroundBlobs';
 import SwipeScreen from './pages/SwipeScreen';
 import ProfileScreen from './pages/ProfileScreen';
+import CompanyProfileScreen from './pages/CompanyProfileScreen';
+import CompanySwipeScreen from './pages/CompanySwipeScreen';
+import CompanyScheduleScreen from './pages/CompanyScheduleScreen';
 import ScheduleScreen from './pages/ScheduleScreen';
 import MatchScreen from './pages/MatchScreen';
 import LoginScreen from './pages/LoginScreen';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('jobfair_token');
+  const token = sessionStorage.getItem('jobfair_token');
   
   if (!token) {
     // Redirection immédiate vers le login si pas de token
@@ -22,26 +25,36 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  // Masquer la barre de navigation sur l'écran de Match et de Login
-  const showNav = location.pathname !== '/match' && location.pathname !== '/login';
+  // Masquer la barre de navigation sur certains écrans
+  const hideNav = ['/match', '/login'].includes(location.pathname);
+  const showNav = !hideNav;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-950">
-      <div className="relative flex flex-col h-[96vh] max-h-[900px] w-full max-w-[450px] overflow-hidden bg-background-light dark:bg-background-dark font-display shadow-2xl rounded-[40px] border-[8px] border-[#1e293b]">
+    <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#edf2f8' }}>
+      <div
+        className="relative flex flex-col h-[96vh] max-h-[900px] w-full max-w-[450px] overflow-hidden font-display shadow-2xl rounded-[40px] border-[8px]"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
       {/* iPhone Notch / Dynamic Island */}
       <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#101722] via-[#101722]/80 to-transparent"></div>
-          <div className="absolute top-0 left-0 right-0 flex justify-center pt-2">
-              <div className="w-32 h-8 bg-black rounded-full flex items-center justify-end px-3 gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#1e293b]/50"></div>
-                  <div className="w-2 h-2 rounded-full bg-[#0f172a]/80"></div>
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgb(16,23,34), transparent)' }}></div>
+            <div className="absolute top-0 left-0 right-0 flex justify-center pt-2">
+              <div className="w-32 h-8 rounded-full flex items-center justify-end px-3 gap-2" style={{ backgroundColor: 'rgb(20,30,48)' }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}></div>
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }}></div>
               </div>
-          </div>
+            </div>
       </div>
 
       <BackgroundBlobs />
       
-      <main className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12">
+      <main
+        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12"
+        style={{ background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 40%)' }}
+      >
         {children}
       </main>
 
@@ -51,7 +64,10 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
       {showNav && (
         <div className="bottom-nav-wrapper">
             {/* Gradient Blur Mask for Bottom Nav */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#101722] via-[#101722]/80 to-transparent pointer-events-none z-40" />
+            <div
+              className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-40"
+              style={{ background: 'linear-gradient(to top, var(--bg-primary), transparent)' }}
+            />
             
             <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
                 <div className="pointer-events-auto">
@@ -66,6 +82,13 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const App: React.FC = () => {
+  // Initialize theme from localStorage or default to dark
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app_theme') || 'dark';
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(savedTheme);
+  }, []);
+
   return (
     <HashRouter>
       <Layout>
@@ -108,6 +131,30 @@ const App: React.FC = () => {
                 <MatchScreen />
               </ProtectedRoute>
             } 
+          />
+          <Route
+            path="/company/profile"
+            element={
+              <ProtectedRoute>
+                <CompanyProfileScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/swipe"
+            element={
+              <ProtectedRoute>
+                <CompanySwipeScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/matches"
+            element={
+              <ProtectedRoute>
+                <CompanyScheduleScreen />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </Layout>

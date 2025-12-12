@@ -1,57 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 
-interface Event {
+interface Interview {
   id: number;
   time: string;
   title: string;
-  person: string;
+  studentName: string;
+  studentProgram: string;
   location: string;
-  status: 'confirmed' | 'pending';
-  logo: string;
-  companyUrl?: string;
-  color: 'emerald' | 'orange';
+  status: 'confirmed' | 'pending' | 'scheduled';
   date: Date;
 }
 
-const ScheduleScreen: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [pendingAppointments, setPendingAppointments] = useState(0);
+const CompanyScheduleScreen: React.FC = () => {
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [pendingMatches, setPendingMatches] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Interviews
-        const interviewsResponse = await api.getInterviews();
+        // Fetch company interviews
+        const interviewsResponse = await api.getCompanyInterviews();
         const interviewsData = interviewsResponse.results || interviewsResponse;
         
         if (Array.isArray(interviewsData)) {
-          const formattedEvents = interviewsData.map((interview: any) => ({
+          const formattedInterviews = interviewsData.map((interview: any) => ({
             id: interview.id,
             time: new Date(interview.time_slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-            title: `Entretien avec ${interview.match.company.name}`,
-            person: interview.match.company.contact_name || 'Recruteur',
+            title: `Entretien avec ${interview.match.student.first_name} ${interview.match.student.last_name}`,
+            studentName: `${interview.match.student.first_name} ${interview.match.student.last_name}`,
+            studentProgram: interview.match.student.program || 'Étudiant',
             location: interview.room || 'Stand A01',
-            status: interview.status,
-            logo: interview.match.company.logo_url || interview.match.company.logo || '/assets/company-default.svg',
-            companyUrl: interview.match.company.website || '',
-            color: (interview.status === 'confirmed' ? 'emerald' : 'orange') as 'emerald' | 'orange',
+            status: interview.status as 'confirmed' | 'pending' | 'scheduled',
             date: new Date(interview.time_slot)
           }));
-          formattedEvents.sort((a: Event, b: Event) => a.date.getTime() - b.date.getTime());
-          setEvents(formattedEvents);
+          formattedInterviews.sort((a: Interview, b: Interview) => a.date.getTime() - b.date.getTime());
+          setInterviews(formattedInterviews);
         }
 
-        // Fetch Matches for "RDV en attente"
-        const matchesResponse = await api.getMatches();
+        // Fetch company matches count
+        const matchesResponse = await api.getCompanyMatches();
         const matchesData = matchesResponse.results || matchesResponse;
         if (Array.isArray(matchesData)) {
-          setPendingAppointments(matchesData.length);
+          setPendingMatches(matchesData.length);
         }
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching company data:', error);
       } finally {
         setLoading(false);
       }
@@ -60,12 +55,10 @@ const ScheduleScreen: React.FC = () => {
     fetchData();
   }, []);
 
-  const nextEvent = events[0];
-  const otherEvents = events.slice(1);
-  const hasEvents = events.length > 0;
-  const hasAnyData = hasEvents || pendingAppointments > 0;
+  const nextInterview = interviews[0];
+  const otherInterviews = interviews.slice(1);
+  const hasInterviews = interviews.length > 0;
 
-  // Affichage normal avec la structure complète - même si vide
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       <div className="bg-gradient-blur"></div>
@@ -74,26 +67,26 @@ const ScheduleScreen: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-2">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Forum Entreprise</p>
-          <div className="rounded-full bg-primary-light px-3 py-1 text-sm font-bold text-primary-dark dark:bg-primary-dark dark:text-primary-light">
-            Jour J
+          <div className="rounded-full bg-pink-500/20 px-3 py-1 text-sm font-bold text-pink-400">
+            Recruteur
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="mt-6 grid grid-cols-2 gap-4">
           <div className="flex flex-col rounded-lg border border-border-light bg-card-light p-4 shadow-glass backdrop-blur-lg dark:border-border-dark dark:bg-card-dark">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{pendingAppointments}</span>
-            <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Matchs en attente</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white">{pendingMatches}</span>
+            <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Matchs avec étudiants</span>
           </div>
           <div className="flex flex-col rounded-lg border border-border-light bg-card-light p-4 shadow-glass backdrop-blur-lg dark:border-border-dark dark:bg-card-dark">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{events.length}</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white">{interviews.length}</span>
             <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Entretiens programmés</span>
           </div>
         </div>
 
         {loading ? (
           <div className="mt-8 text-center text-slate-500">Chargement...</div>
-        ) : hasEvents ? (
+        ) : hasInterviews ? (
           <>
             {/* Swipe Hint */}
             <div className="mt-8 mb-6 flex flex-col items-center justify-center text-center">
@@ -104,77 +97,63 @@ const ScheduleScreen: React.FC = () => {
             <div className="space-y-4">
               <h2 className="px-2 text-lg font-bold text-slate-900 dark:text-white">Prochain RDV</h2>
               
-              {nextEvent && (
-                <div className="relative rounded-lg border-2 border-primary shadow-glass backdrop-blur-lg dark:border-primary-light">
+              {nextInterview && (
+                <div className="relative rounded-lg border-2 border-pink-500 shadow-glass backdrop-blur-lg">
                   <div className="rounded-[11px] bg-card-light p-4 dark:bg-card-dark">
                     <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Aujourd'hui, {nextEvent.time}</p>
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Aujourd'hui, {nextInterview.time}</p>
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${
-                        nextEvent.status === 'confirmed' 
+                        nextInterview.status === 'confirmed' 
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' 
                         : 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
                       }`}>
                         <span className={`w-3 h-3 inline-block rounded-full ${
-                          nextEvent.status === 'confirmed' ? 'bg-emerald-500' : 'bg-orange-500'
+                          nextInterview.status === 'confirmed' ? 'bg-emerald-500' : 'bg-orange-500'
                         }`}></span>
-                        {nextEvent.status === 'confirmed' ? 'Confirmé' : 'En attente'}
+                        {nextInterview.status === 'confirmed' ? 'Confirmé' : 'En attente'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center gap-4">
-                      <img
-                        src={nextEvent.logo}
-                        alt="Company logo"
-                        className="w-10 h-10 shrink-0 rounded-full object-cover"
-                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                          (e.currentTarget as HTMLImageElement).src = '/assets/company-default.svg';
-                        }}
-                      />
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                        {nextInterview.studentName.charAt(0)}
+                      </div>
                       <div className="flex-1">
-                        <p className="text-base font-semibold leading-normal text-slate-900 dark:text-white">{nextEvent.title}</p>
-                        {nextEvent.companyUrl && (
-                          <a href={nextEvent.companyUrl} target="_blank" rel="noreferrer" className="text-primary text-sm font-medium hover:underline block">Visiter le site</a>
-                        )}
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{nextEvent.person}, {nextEvent.location}</p>
+                        <p className="text-base font-semibold leading-normal text-slate-900 dark:text-white">{nextInterview.studentName}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{nextInterview.studentProgram}</p>
+                        <p className="text-xs text-slate-400">{nextInterview.location}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Other Events */}
-              {otherEvents.length > 0 && (
+              {/* Other Interviews */}
+              {otherInterviews.length > 0 && (
                 <>
                   <h2 className="px-2 pt-4 text-lg font-bold text-slate-900 dark:text-white">Autres entretiens</h2>
-                  {otherEvents.map((event) => (
-                    <div key={event.id} className="rounded-lg border border-border-light bg-card-light p-4 shadow-glass backdrop-blur-lg dark:border-border-dark dark:bg-card-dark">
+                  {otherInterviews.map((interview) => (
+                    <div key={interview.id} className="rounded-lg border border-border-light bg-card-light p-4 shadow-glass backdrop-blur-lg dark:border-border-dark dark:bg-card-dark">
                       <div className="flex items-start justify-between">
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{event.time}</p>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{interview.time}</p>
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${
-                          event.status === 'confirmed' 
+                          interview.status === 'confirmed' 
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' 
                           : 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
                         }`}>
                           <span className={`w-3 h-3 inline-block rounded-full ${
-                            event.status === 'confirmed' ? 'bg-emerald-500' : 'bg-orange-500'
+                            interview.status === 'confirmed' ? 'bg-emerald-500' : 'bg-orange-500'
                           }`}></span>
-                          {event.status === 'confirmed' ? 'Confirmé' : 'En attente'}
+                          {interview.status === 'confirmed' ? 'Confirmé' : 'En attente'}
                         </span>
                       </div>
                       <div className="mt-3 flex items-center gap-4">
-                        <img
-                          src={event.logo}
-                          alt="Company logo"
-                          className="w-10 h-10 shrink-0 rounded-full object-cover"
-                          onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                            (e.currentTarget as HTMLImageElement).src = '/assets/company-default.svg';
-                          }}
-                        />
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold">
+                          {interview.studentName.charAt(0)}
+                        </div>
                         <div className="flex-1">
-                          <p className="text-base font-semibold leading-normal text-slate-900 dark:text-white">{event.title}</p>
-                          {event.companyUrl && (
-                            <a href={event.companyUrl} target="_blank" rel="noreferrer" className="text-primary text-sm font-medium hover:underline block">Visiter le site</a>
-                          )}
-                          <p className="text-sm text-slate-500 dark:text-slate-400">{event.person}, {event.location}</p>
+                          <p className="text-base font-semibold leading-normal text-slate-900 dark:text-white">{interview.studentName}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{interview.studentProgram}</p>
+                          <p className="text-xs text-slate-400">{interview.location}</p>
                         </div>
                       </div>
                     </div>
@@ -192,7 +171,7 @@ const ScheduleScreen: React.FC = () => {
           <div className="mt-12 flex flex-col items-center justify-center text-center">
             <span className="material-symbols-outlined text-5xl text-slate-500 mb-3">event_busy</span>
             <p className="text-slate-400 text-sm">Aucun entretien programmé pour le moment.</p>
-            <p className="text-slate-500 text-xs mt-1">Les entreprises vous contacteront après un match.</p>
+            <p className="text-slate-500 text-xs mt-1">Swipez sur des étudiants pour créer des matchs.</p>
           </div>
         )}
       </main>
@@ -200,4 +179,4 @@ const ScheduleScreen: React.FC = () => {
   );
 };
 
-export default ScheduleScreen;
+export default CompanyScheduleScreen;

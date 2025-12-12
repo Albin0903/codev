@@ -1,0 +1,246 @@
+"""
+API Views pour les entreprises (Company)
+Gère le profil entreprise, le swipe sur les étudiants, et les matchs
+"""
+from rest_framework import viewsets, status
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
+from .models import Student, Company, CompanySwipe, Match, InternshipOffer, Interview
+from .serializers import CompanySerializer, StudentSerializer, InternshipOfferSerializer, InterviewSerializer
+from .api_views import create_interview_for_match  # Import de la fonction utilitaire
+from .permissions import IsCompany, CanOnlyModifyOwnData
+
+
+class CompanyStudentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint pour que les ENTREPRISES consultent les étudiants
+    """
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    @action(detail=False, methods=['get'])
+    def next_card(self, request):
+        """Retourne le prochain étudiant à swiper pour l'entreprise"""
+        try:
+            company = request.user.company
+            # Récupérer les étudiants non encore swipés par cette entreprise
+            swiped_students = CompanySwipe.objects.filter(company=company).values_list('student_id', flat=True)
+            student = Student.objects.exclude(id__in=swiped_students).select_related('user').first()
+            
+            if student:
+                serializer = self.get_serializer(student, context={'request': request})
+                return Response(serializer.data)
+            else:
+                return Response({'detail': 'No more students'}, status=status.HTTP_204_NO_CONTENT)
+        except Company.DoesNotExist:
+            return Response({'error': 'Company profile not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CompanySwipeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint pour gérer les swipes des ENTREPRISES sur les étudiants.
+    Une entreprise ne peut créer que SES propres swipes.
+    """
+    permission_classes = [IsAuthenticated, IsCompany, CanOnlyModifyOwnData]
+    
+    def get_queryset(self):
+        """Retourner uniquement les swipes de l'entreprise connectée"""
+        try:
+            return CompanySwipe.objects.filter(company=self.request.user.company)
+        except Company.DoesNotExist:
+            return CompanySwipe.objects.none()
+    
+    def create(self, request):
+        """Créer un nouveau swipe d'entreprise vers un étudiant - seulement pour l'entreprise connectée"""
+        try:
+            company = request.user.company
+        except Company.DoesNotExist:
+            return Response(
+                {'error': 'Company profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        student_id = request.data.get('student_id')
+        direction = request.data.get('direction')
+        
+        if not student_id or not direction:
+            return Response(
+                {'error': 'student_id and direction are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validation: direction doit être 'left' ou 'right'
+        if direction not in ['left', 'right']:
+            return Response(
+                {'error': 'direction must be "left" or "right"'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        student = get_object_or_404(Student, id=student_id)
+        
+        # Créer le swipe de l'entreprise
+        swipe, created = CompanySwipe.objects.get_or_create(
+            company=company,
+            student=student,
+            defaults={'direction': direction}
+        )
+        
+        # Vérifier s'il y a match mutuel
+        match_created = False
+        is_mutual = False
+        
+        if direction == 'right':
+            # Vérifier si l'étudiant a aussi liké cette entreprise
+            from .models import Swipe
+            student_liked = Swipe.objects.filter(
+                student=student,
+                company=company,
+                direction='right'
+            ).exists()
+            
+            if student_liked:
+                # Match mutuel !
+                match, match_created = Match.objects.get_or_create(
+                    student=student,
+                    company=company,
+                    defaults={'is_mutual': True}
+                )
+                if not match_created and not match.is_mutual:
+                    match.is_mutual = True
+                    match.save()
+                is_mutual = True
+                
+                # Créer automatiquement un entretien
+                create_interview_for_match(match)
+        
+        return Response({
+            'swipe': {
+                'id': swipe.id,
+                'company_id': company.id,
+                'student_id': student.id,
+                'direction': swipe.direction,
+                'created_at': swipe.created_at
+            },
+            'match': match_created or is_mutual,
+            'created': created
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class CompanyOfferViewSet(viewsets.ReadOnlyModelViewSet):
+    """Liste des offres de l'entreprise connectée"""
+    serializer_class = InternshipOfferSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None  # Désactiver la pagination
+
+    def get_queryset(self):
+        try:
+            return InternshipOffer.objects.filter(company=self.request.user.company)
+        except Company.DoesNotExist:
+            return InternshipOffer.objects.none()
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated, IsCompany])
+def current_company(request):
+    """GET: Retourne les informations de l'entreprise connectée
+       PATCH: Met à jour le profil de l'entreprise (seulement la sienne)
+    """
+    try:
+        company = request.user.company
+    except Company.DoesNotExist:
+        return Response({'error': 'Company profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = CompanySerializer(company, context={'request': request})
+        return Response(serializer.data)
+
+    # PATCH - Seulement si c'est l'utilisateur authentifié
+    if company.user != request.user:
+        return Response(
+            {'error': 'Vous ne pouvez modifier que votre propre profil'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    serializer = CompanySerializer(company, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_matches(request):
+    """Retourne les matchs mutuels de l'entreprise"""
+    try:
+        company = request.user.company
+        matches = Match.objects.filter(
+            company=company,
+            is_mutual=True
+        ).select_related('student__user', 'company').order_by('-created_at')
+        
+        from .serializers import MatchSerializer
+        serializer = MatchSerializer(matches, many=True, context={'request': request})
+        return Response(serializer.data)
+    except Company.DoesNotExist:
+        return Response({'error': 'Company profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_interviews(request):
+    """Retourne les entretiens de l'entreprise"""
+    try:
+        company = request.user.company
+        interviews = Interview.objects.filter(
+            match__company=company
+        ).select_related('match__student__user', 'match__company').order_by('time_slot')
+        
+        serializer = InterviewSerializer(interviews, many=True, context={'request': request})
+        return Response(serializer.data)
+    except Company.DoesNotExist:
+        return Response({'error': 'Company profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated, IsCompany])
+def upload_company_logo(request):
+    """POST: Upload le logo d'entreprise
+       DELETE: Supprime le logo"""
+    try:
+        company = request.user.company
+    except Company.DoesNotExist:
+        return Response({'error': 'Company profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if company.logo:
+            company.logo.delete(save=True)
+            serializer = CompanySerializer(company, context={'request': request})
+            return Response(serializer.data)
+        return Response({'error': 'Aucun logo à supprimer'}, status=status.HTTP_404_NOT_FOUND)
+
+    # POST upload
+    if 'logo' not in request.FILES:
+        return Response({'error': 'Aucun fichier fourni'}, status=status.HTTP_400_BAD_REQUEST)
+
+    logo_file = request.FILES['logo']
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if logo_file.content_type not in allowed_types:
+        return Response({'error': 'Format non supporté. Utilisez JPG, PNG, GIF ou WebP'}, status=status.HTTP_400_BAD_REQUEST)
+
+    max_size = 2 * 1024 * 1024
+    if logo_file.size > max_size:
+        return Response({'error': 'Fichier trop volumineux. Maximum 2MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if company.logo:
+        company.logo.delete(save=False)
+
+    company.logo = logo_file
+    company.save()
+
+    serializer = CompanySerializer(company, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)

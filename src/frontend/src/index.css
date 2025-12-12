@@ -9,10 +9,36 @@
     box-sizing: border-box;
   }
 
+  :root {
+    /* Dark theme (default) */
+    --bg-primary: #101722;
+    --bg-secondary: #1E293B;
+    --bg-card: rgba(30, 41, 59, 0.5);
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --notch-bg: #101722;
+  }
+
+  .light {
+    /* Light theme */
+    --bg-primary: #e9f1ff;
+    --bg-secondary: #d7e4ff;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --text-primary: #0b1f3a;
+    --text-secondary: #1f3656;
+    --text-tertiary: #4b5f7c;
+    --border-color: rgba(12, 43, 85, 0.12);
+    --notch-bg: #d7e4ff;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
   .bg-gradient-blur {
@@ -35,6 +61,13 @@
         radial-gradient(at 80% 25%, hsla(220, 80%, 50%, 0.3) 0px, transparent 50%),
         radial-gradient(at 25% 80%, hsla(180, 80%, 40%, 0.3) 0px, transparent 50%),
         radial-gradient(at 75% 90%, hsla(340, 80%, 60%, 0.3) 0px, transparent 50%);
+  }
+  .light .bg-gradient-blur {
+    background-image:
+        radial-gradient(at 18% 12%, hsla(185, 72%, 68%, 0.55) 0px, transparent 50%),
+        radial-gradient(at 82% 18%, hsla(210, 75%, 70%, 0.55) 0px, transparent 50%),
+        radial-gradient(at 20% 82%, hsla(320, 70%, 78%, 0.4) 0px, transparent 55%),
+        radial-gradient(at 78% 88%, hsla(260, 68%, 75%, 0.35) 0px, transparent 55%);
   }
   /* Hide native scrollbar but keep scroll functionality */
   html, body {

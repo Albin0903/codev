@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Student, Skill, Company, Swipe, Match, Interview
+from .models import Student, Skill, Company, Swipe, Match, Interview, InternshipOffer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,10 +20,11 @@ class StudentSerializer(serializers.ModelSerializer):
     skills = SkillSerializer(many=True, read_only=True)
     cv_url = serializers.SerializerMethodField()
     cv_name = serializers.SerializerMethodField()
+    photo_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Student
-        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'hobbies', 'theme', 'cv', 'cv_url', 'cv_name', 'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'skills', 'created_at']
+        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'hobbies', 'theme', 'cv', 'cv_url', 'cv_name', 'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'photo', 'photo_url', 'photo_visible', 'skills', 'created_at']
     
     def get_cv_url(self, obj):
         """Retourne l'URL absolue du CV si présent"""
@@ -39,15 +40,51 @@ class StudentSerializer(serializers.ModelSerializer):
         if obj.cv:
             return obj.cv.name.split('/')[-1]
         return None
+    
+    def get_photo_url(self, obj):
+        """Retourne l'URL absolue de la photo si présente et visible"""
+        if not obj.photo:
+            return None
+
+        request = self.context.get('request') if hasattr(self, 'context') else None
+
+        # Le propriétaire voit toujours sa photo, même masquée aux recruteurs
+        if request and getattr(request, 'user', None) == obj.user:
+            return request.build_absolute_uri(obj.photo.url)
+
+        # Les autres ne voient la photo que si elle est marquée comme visible
+        if obj.photo_visible:
+            if request:
+                return request.build_absolute_uri(obj.photo.url)
+            return obj.photo.url
+        return None
+
+
+class InternshipOfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InternshipOffer
+        fields = ['id', 'title', 'description', 'location', 'duration', 'requirements', 'created_at']
 
 
 class CompanySerializer(serializers.ModelSerializer):
+    offers = InternshipOfferSerializer(many=True, read_only=True)
+    logo_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Company
         fields = [
-            'id', 'name', 'sector', 'description', 'website', 
-            'logo', 'contact_email', 'contact_name', 'created_at'
+            'id', 'name', 'sector', 'description', 'website', 'logo', 'logo_url',
+            'contact_email', 'contact_name', 'address', 'employees', 'founded_year', 'benefits',
+            'created_at', 'offers'
         ]
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request') if hasattr(self, 'context') else None
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
 
 
 class SwipeSerializer(serializers.ModelSerializer):
@@ -81,4 +118,4 @@ class InterviewSerializer(serializers.ModelSerializer):
         ]
     
     def get_company(self, obj):
-        return CompanySerializer(obj.match.company).data
+        return CompanySerializer(obj.match.company, context=self.context).data

@@ -1,0 +1,286 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* JobFair Admin Theme - Modern Dark Style */
+    :root {
+        --primary: #0d69f2;
+        --primary-dark: #0a52c1;
+        --accent: #ec4899;
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --border: #334155;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+    }
+    
+    body {
+        background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1f35 100%) !important;
+        min-height: 100vh;
+    }
+    
+    #header {
+        background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%) !important;
+        padding: 15px 20px !important;
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 4px 20px rgba(13, 105, 242, 0.3);
+    }
+    
+    #header h1, #header a {
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    #branding h1 {
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+    }
+    
+    #user-tools {
+        color: rgba(255,255,255,0.9) !important;
+    }
+    
+    #user-tools a {
+        color: white !important;
+        background: rgba(255,255,255,0.15) !important;
+        padding: 6px 12px !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    #user-tools a:hover {
+        background: rgba(255,255,255,0.25) !important;
+    }
+    
+    #container {
+        background: transparent !important;
+    }
+    
+    #content {
+        padding: 30px !important;
+    }
+    
+    #content h1 {
+        color: var(--text-primary) !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 30px !important;
+    }
+    
+    .module {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        margin-bottom: 20px !important;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+    }
+    
+    .module caption, .module h2 {
+        background: linear-gradient(90deg, rgba(13, 105, 242, 0.2), rgba(236, 72, 153, 0.1)) !important;
+        color: var(--primary) !important;
+        padding: 15px 20px !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .module table {
+        background: transparent !important;
+    }
+    
+    .module table th {
+        color: var(--text-secondary) !important;
+        background: rgba(0,0,0,0.2) !important;
+        padding: 12px 20px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .module table td {
+        border-bottom: 1px solid var(--border) !important;
+        padding: 15px 20px !important;
+    }
+    
+    .module table tr:hover td {
+        background: rgba(13, 105, 242, 0.05) !important;
+    }
+    
+    .module table a {
+        color: var(--primary) !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .module table a:hover {
+        color: var(--accent) !important;
+    }
+    
+    .addlink, .changelink {
+        color: var(--text-secondary) !important;
+        transition: color 0.2s ease !important;
+    }
+    
+    .addlink:hover {
+        color: #22c55e !important;
+    }
+    
+    .changelink:hover {
+        color: var(--primary) !important;
+    }
+    
+    /* Actions récentes */
+    #recent-actions-module h2 {
+        background: linear-gradient(90deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.1)) !important;
+        color: var(--accent) !important;
+    }
+    
+    #recent-actions-module li {
+        padding: 12px 20px !important;
+        border-bottom: 1px solid var(--border) !important;
+        color: var(--text-secondary) !important;
+    }
+    
+    #recent-actions-module a {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: var(--bg-card) !important;
+        color: var(--text-secondary) !important;
+        padding: 12px 20px !important;
+        border-radius: 12px !important;
+        margin: 20px 30px 0 !important;
+        border: 1px solid var(--border) !important;
+    }
+    
+    .breadcrumbs a {
+        color: var(--primary) !important;
+    }
+    
+    /* Boutons et liens */
+    a.button, input[type="submit"], button[type="submit"] {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
+        color: white !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 12px rgba(13, 105, 242, 0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    a.button:hover, input[type="submit"]:hover, button[type="submit"]:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 16px rgba(13, 105, 242, 0.4) !important;
+    }
+    
+    /* Bouton danger */
+    .deletelink, a.button.danger, input[type="submit"].default {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    }
+    
+    /* Footer */
+    #footer {
+        background: var(--bg-card) !important;
+        color: var(--text-secondary) !important;
+        border-top: 1px solid var(--border) !important;
+        padding: 15px 20px !important;
+        margin-top: 40px !important;
+    }
+    
+    /* Inputs */
+    input, select, textarea {
+        background: var(--bg-dark) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        color: var(--text-primary) !important;
+        padding: 10px 14px !important;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary) !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(13, 105, 242, 0.2) !important;
+    }
+    
+    /* Messages */
+    .messagelist li {
+        background: var(--bg-card) !important;
+        border-left: 4px solid var(--primary) !important;
+        color: var(--text-primary) !important;
+        padding: 15px 20px !important;
+        margin: 10px 30px !important;
+        border-radius: 8px !important;
+    }
+    
+    .messagelist li.success {
+        border-left-color: #22c55e !important;
+        background: rgba(34, 197, 94, 0.1) !important;
+    }
+    
+    .messagelist li.error {
+        border-left-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    /* Outils d'admin personnalisés */
+    .admin-tools-module {
+        background: linear-gradient(135deg, var(--bg-card) 0%, #1a2744 100%) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        padding: 20px !important;
+        margin: 20px 0 !important;
+    }
+    
+    .admin-tools-module h2 {
+        color: var(--text-primary) !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 15px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .danger-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        color: white !important;
+        padding: 12px 20px !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .danger-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+
+<div class="admin-tools-module">
+    <h2>🛠️ Outils d'administration</h2>
+    
+    <div style="margin-top: 10px;">
+        <a href="{% url 'admin:reset-db' %}" class="danger-btn">
+            🔄 Réinitialiser la base de données
+        </a>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 10px 0 0 0;">
+            Supprime tous les matchs, swipes et entretiens (profils préservés)
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -3,8 +3,13 @@ from django.utils.html import format_html
 from django import forms
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib.auth.models import User
+from django.urls import path
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.core.management import call_command
+from io import StringIO
 
-from .models import Student, Skill, Company, Swipe, Match, Interview
+from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer
 
 
 class StudentForm(forms.ModelForm):
@@ -135,6 +140,13 @@ class SwipeAdmin(admin.ModelAdmin):
     search_fields = ['student__user__username', 'company__name']
 
 
+@admin.register(CompanySwipe)
+class CompanySwipeAdmin(admin.ModelAdmin):
+    list_display = ['company', 'student', 'direction', 'created_at']
+    list_filter = ['direction', 'created_at']
+    search_fields = ['company__name', 'student__user__username']
+
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ['student', 'company', 'is_mutual', 'created_at']
@@ -171,3 +183,54 @@ admin.site.unregister(User)
 class CustomUserAdmin(DefaultUserAdmin):
     inlines = (StudentInline,)
     # keep the existing behavior of DefaultUserAdmin
+
+
+@admin.register(InternshipOffer)
+class InternshipOfferAdmin(admin.ModelAdmin):
+    list_display = ['title', 'company', 'location', 'duration', 'created_at']
+    list_filter = ['company', 'created_at']
+    search_fields = ['title', 'company__name', 'location', 'description']
+    raw_id_fields = ('company',)
+
+
+# Site admin personnalisé avec option de reset
+class CustomAdminSite(admin.AdminSite):
+    site_header = "JobFair Admin"
+    site_title = "JobFair"
+    index_title = "Bienvenue"
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('reset-db/', self.admin_view(self.reset_db_view), name='reset-db'),
+        ]
+        return custom_urls + urls
+    
+    def reset_db_view(self, request):
+        """Vue pour réinitialiser la base de données"""
+        from django.contrib import messages
+        if request.method == 'POST':
+            try:
+                # Appeler la commande reset_db avec --force
+                output = StringIO()
+                call_command('reset_db', '--force', stdout=output)
+                result = output.getvalue()
+                
+                # Rediriger vers l'admin avec un message de succès
+                messages.success(request, '✅ Base de données réinitialisée avec succès !')
+                return HttpResponseRedirect('/admin/')
+            except Exception as e:
+                messages.error(request, f'❌ Erreur: {str(e)}')
+                return HttpResponseRedirect('/admin/')
+        
+        # Afficher un formulaire de confirmation
+        context = {
+            'title': 'Réinitialiser la base de données',
+            'opts': None,
+            'has_view_permission': True,
+        }
+        return TemplateResponse(request, 'admin/reset_db.html', context)
+
+# Utiliser le site admin personnalisé
+admin.site.__class__ = CustomAdminSite
+

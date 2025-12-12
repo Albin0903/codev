@@ -7,12 +7,54 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
+from django.utils import timezone
+from datetime import timedelta
+import random
 
-from .models import Student, Company, Swipe, Match, Interview
+from .models import Student, Company, Swipe, CompanySwipe, Match, Interview
 from .serializers import (
     StudentSerializer, CompanySerializer, SwipeSerializer, 
     MatchSerializer, InterviewSerializer
 )
+from .permissions import IsStudent, IsCompany, CanOnlyModifyOwnData
+
+
+def create_interview_for_match(match):
+    """Créer automatiquement un entretien pour un match mutuel.
+    
+    Génère un créneau horaire aléatoire dans les prochaines heures du forum.
+    """
+    # Vérifier si un interview existe déjà pour ce match
+    if hasattr(match, 'interview'):
+        return match.interview
+    
+    # Générer un créneau horaire (aujourd'hui ou demain, entre 9h et 17h)
+    now = timezone.now()
+    # Arrondir à l'heure suivante
+    base_time = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    
+    # Ajouter un délai aléatoire entre 1h et 6h
+    random_hours = random.randint(1, 6)
+    interview_time = base_time + timedelta(hours=random_hours)
+    
+    # S'assurer que c'est pendant les heures ouvrées (9h-17h)
+    if interview_time.hour < 9:
+        interview_time = interview_time.replace(hour=9)
+    elif interview_time.hour >= 17:
+        # Passer au lendemain 9h
+        interview_time = interview_time.replace(hour=9) + timedelta(days=1)
+    
+    # Créer l'interview
+    rooms = ['Salle A01', 'Salle A02', 'Salle B01', 'Salle B02', 'Stand Principal']
+    interview = Interview.objects.create(
+        match=match,
+        time_slot=interview_time,
+        duration=20,
+        room=random.choice(rooms),
+        status='scheduled'
+    )
+    
+    return interview
 
 
 class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,7 +75,7 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
             company = Company.objects.exclude(id__in=swiped_companies).first()
             
             if company:
-                serializer = self.get_serializer(company)
+                serializer = self.get_serializer(company, context={'request': request})
                 return Response(serializer.data)
             else:
                 return Response({'detail': 'No more companies'}, status=status.HTTP_204_NO_CONTENT)
@@ -43,57 +85,87 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
 
 class SwipeViewSet(viewsets.ModelViewSet):
     """
-    API endpoint pour gérer les swipes
+    API endpoint pour gérer les swipes.
+    Un étudiant ne peut créer que SES propres swipes.
     """
     serializer_class = SwipeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent, CanOnlyModifyOwnData]
     
     def get_queryset(self):
-        return Swipe.objects.filter(student=self.request.user.student)
+        """Retourner uniquement les swipes de l'utilisateur connecté"""
+        try:
+            return Swipe.objects.filter(student=self.request.user.student)
+        except Student.DoesNotExist:
+            return Swipe.objects.none()
     
     def create(self, request):
-        """Créer un nouveau swipe"""
+        """Créer un nouveau swipe - seulement pour l'utilisateur connecté"""
         try:
             student = request.user.student
-            company_id = request.data.get('company_id')
-            direction = request.data.get('direction')
-            
-            if not company_id or not direction:
-                return Response(
-                    {'error': 'company_id and direction are required'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            company = get_object_or_404(Company, id=company_id)
-            
-            # Créer le swipe
-            swipe, created = Swipe.objects.get_or_create(
-                student=student,
-                company=company,
-                defaults={'direction': direction}
-            )
-            
-            # Si c'est un like, vérifier s'il y a match
-            match_created = False
-            if direction == 'right':
-                match, match_created = Match.objects.get_or_create(
-                    student=student,
-                    company=company,
-                    defaults={'is_mutual': True}
-                )
-            
-            serializer = self.get_serializer(swipe)
-            return Response({
-                'swipe': serializer.data,
-                'match': match_created,
-                'created': created
-            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-            
         except Student.DoesNotExist:
             return Response(
                 {'error': 'Student profile not found'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        company_id = request.data.get('company_id')
+        direction = request.data.get('direction')
+        
+        if not company_id or not direction:
+            return Response(
+                {'error': 'company_id and direction are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validation: direction doit être 'left' ou 'right'
+        if direction not in ['left', 'right']:
+            return Response(
+                {'error': 'direction must be "left" or "right"'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        company = get_object_or_404(Company, id=company_id)
+        
+        # Créer le swipe (un par student/company)
+        swipe, created = Swipe.objects.get_or_create(
+            student=student,
+            company=company,
+            defaults={'direction': direction}
+        )
+        
+        # Vérifier s'il y a match mutuel
+        match_created = False
+        is_mutual = False
+        
+        if direction == 'right':
+            # Vérifier si l'entreprise a aussi liké cet étudiant
+            company_liked = CompanySwipe.objects.filter(
+                company=company,
+                student=student,
+                direction='right'
+            ).exists()
+            
+            if company_liked:
+                # Match mutuel !
+                match, match_created = Match.objects.get_or_create(
+                    student=student,
+                    company=company,
+                    defaults={'is_mutual': True}
+                )
+                if not match_created and not match.is_mutual:
+                    match.is_mutual = True
+                    match.save()
+                is_mutual = True
+                
+                # Créer automatiquement un entretien
+                create_interview_for_match(match)
+        
+        serializer = self.get_serializer(swipe)
+        return Response({
+            'swipe': serializer.data,
+            'match': match_created or is_mutual,
+            'created': created
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 
 class MatchViewSet(viewsets.ReadOnlyModelViewSet):
@@ -208,7 +280,7 @@ def current_user(request):
 @permission_classes([AllowAny])
 @csrf_exempt
 def login_view(request):
-    """Endpoint de connexion"""
+    """Endpoint de connexion - détecte automatiquement le type d'utilisateur"""
     username = request.data.get('username')
     password = request.data.get('password')
     
@@ -225,20 +297,41 @@ def login_view(request):
         # create or get token
         token, _ = Token.objects.get_or_create(user=user)
         
-        # Get or create student profile
-        student, created = Student.objects.get_or_create(
-            user=user,
-            defaults={
-                'program': 'Non spécifié',
-                'year': 'N/A',
-                'preferences': 'Profil généré automatiquement'
-            }
-        )
+        # Détecter le type d'utilisateur
+        user_type = None
+        profile_data = {}
         
-        serializer = StudentSerializer(student)
-        data = serializer.data
-        data['token'] = token.key
-        return Response(data)
+        # Vérifier si c'est une entreprise
+        try:
+            company = user.company
+            from .serializers import CompanySerializer
+            serializer = CompanySerializer(company, context={'request': request})
+            profile_data = serializer.data
+            user_type = 'company'
+        except Company.DoesNotExist:
+            pass
+        
+        # Sinon, c'est un étudiant (ou on en crée un)
+        if user_type is None:
+            student, created = Student.objects.get_or_create(
+                user=user,
+                defaults={
+                    'program': 'Non spécifié',
+                    'year': 'N/A',
+                    'preferences': 'Profil généré automatiquement'
+                }
+            )
+            from .serializers import StudentSerializer
+            serializer = StudentSerializer(student, context={'request': request})
+            profile_data = serializer.data
+            user_type = 'student'
+        
+        # Retourner les infos avec le type d'utilisateur
+        response_data = profile_data
+        response_data['token'] = token.key
+        response_data['user_type'] = user_type  # 'student' ou 'company'
+        
+        return Response(response_data)
     else:
         return Response(
             {'error': 'Identifiants invalides'},
@@ -249,7 +342,13 @@ def login_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    """Endpoint de déconnexion"""
+    """Endpoint de déconnexion - supprime le token"""
+    try:
+        # Supprimer le token de l'utilisateur
+        request.user.auth_token.delete()
+    except Exception:
+        pass
+    
     logout(request)
     return Response({'message': 'Successfully logged out'})
 
@@ -319,3 +418,99 @@ def upload_cv(request):
     response_data = serializer.data
     response_data['extracted_from_cv'] = extracted_data  # Inclure les données extraites pour la modal
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST', 'DELETE', 'PATCH'])
+@permission_classes([IsAuthenticated, IsStudent])
+def upload_photo(request):
+    """POST: Upload une photo de profil
+       DELETE: Supprime la photo
+       PATCH: Bascule la visibilité de la photo (photo_visible)
+    """
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        return Response({'error': 'Student profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if student.photo:
+            student.photo.delete(save=True)
+            return Response({'message': 'Photo supprimée avec succès'})
+        return Response({'error': 'Aucune photo à supprimer'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        # Basculer la visibilité
+        student.photo_visible = not student.photo_visible
+        student.save()
+        serializer = StudentSerializer(student, context={'request': request})
+        return Response(serializer.data)
+
+    # POST - Upload
+    if 'photo' not in request.FILES:
+        return Response({'error': 'Aucun fichier fourni'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    photo_file = request.FILES['photo']
+    
+    # Validation du type de fichier (images uniquement)
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if photo_file.content_type not in allowed_types:
+        return Response(
+            {'error': 'Format non supporté. Utilisez JPG, PNG, GIF ou WebP'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validation de la taille (max 2MB)
+    max_size = 2 * 1024 * 1024  # 2MB
+    if photo_file.size > max_size:
+        return Response(
+            {'error': 'Fichier trop volumineux. Maximum 2MB.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Supprimer l'ancienne photo s'il existe
+    if student.photo:
+        student.photo.delete(save=False)
+    
+    # Sauvegarder la nouvelle photo
+    student.photo = photo_file
+    student.photo_visible = True  # Par défaut, la photo est visible
+    student.save()
+    
+    # Retourner les infos mises à jour
+    serializer = StudentSerializer(student, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@csrf_exempt
+def reset_database(request):
+    """
+    ⚠️ SÉCURITÉ : Réinitialise la base de données en supprimant tous les matchs, swipes et entretiens.
+    Permet de recommencer les tests de swipe.
+    
+    NOTE: Cette vue est désactivée en production pour éviter les abus.
+    """
+    from django.core.management import call_command
+    
+    # ⚠️ Protection : vérifier qu'on est en développement
+    from django.conf import settings
+    if not settings.DEBUG:
+        return Response({
+            'success': False,
+            'error': 'Cette fonctionnalité est désactivée en production.'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        call_command('reset_db', '--force')
+        return Response({
+            'success': True,
+            'message': 'Base de données réinitialisée avec succès'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

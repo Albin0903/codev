@@ -1,35 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { useLayoutEffect } from 'react';
+
+type ConfirmModal = { show: boolean; title: string; message: string; onConfirm: () => void } | null;
 
 const ProfileScreen: React.FC = () => {
-  const [photoVisible, setPhotoVisible] = useState(true);
+  const navigate = useNavigate();
   const [userData, setUserData] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [formData, setFormData] = useState<any>({});
   const [uploadingCV, setUploadingCV] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{show: boolean, title: string, message: string, onConfirm: () => void} | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
   const [cvExtractedData, setCvExtractedData] = useState<any>(null);
   const [showCvImportModal, setShowCvImportModal] = useState(false);
   const cvInputRef = React.useRef<HTMLInputElement>(null);
-
-  // toggle body class so we can hide the bottom nav and prevent background interactions
-  useEffect(() => {
-    if (editingProfile) {
-      document.body.classList.add('modal-open');
-      // prevent background scroll on mobile
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-    };
-  }, [editingProfile]);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,6 +46,8 @@ const ProfileScreen: React.FC = () => {
           location: data?.location || '',
           languages: data?.languages || '',
           phone: data?.phone || '',
+          photo_url: data?.photo_url || null,
+          photo_visible: data?.photo_visible ?? true,
         });
       } catch (error) {
         console.error('Erreur lors du chargement du profil:', error);
@@ -78,87 +68,129 @@ const ProfileScreen: React.FC = () => {
 
   if (!userData) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-white">Vous devez être connecté pour voir cette page.</div>
+      <div className="flex flex-col items-center justify-center h-screen gap-4 px-6 text-center">
+        <div className="text-white text-lg font-semibold">Vous devez être connecté pour voir cette page.</div>
+        <button
+          className="px-4 py-2 rounded-xl bg-primary text-white font-semibold shadow-lg hover:brightness-110 transition"
+          onClick={() => {
+            api.clearAuth();
+            navigate('/login');
+          }}
+        >
+          Se connecter
+        </button>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col px-3 pt-6 pb-32 gap-6 w-full max-w-full">
-      
-      {/* Edit Button - Top Right */}
-      <div className="flex justify-between items-center px-2">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-400/30">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-          </span>
-          <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Visible Recruteur</span>
-        </div>
-        <button
-          className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-400/30 text-violet-300 hover:text-violet-200 hover:from-violet-500/30 hover:to-fuchsia-500/30 transition-all"
-          onClick={() => { 
-            setEditingProfile(true); 
-            setFormData({
-              first_name: userData?.user?.first_name || '',
-              last_name: userData?.user?.last_name || '',
-              school: userData?.school || '',
-              school_url: userData?.school_url || '',
-              program: userData?.program || '',
-              year: userData?.year || '',
-              gender: userData?.gender || '',
-              preferences: userData?.preferences || '',
-              availability: userData?.availability || '',
-              duration: userData?.duration || '',
-              education: userData?.education || '',
-              experience: userData?.experience || '',
-              hobbies: userData?.hobbies || '',
-              theme: userData?.theme || 'dark',
-              skills: userData?.skills ? userData.skills.map((s: any) => s.name) : [],
-              linkedin_url: userData?.linkedin_url || '',
-              github_url: userData?.github_url || '',
-              website_url: userData?.website_url || '',
-              location: userData?.location || '',
-              languages: userData?.languages || '',
-              phone: userData?.phone || '',
-            }); 
-          }}
-        >
-          <span className="material-symbols-outlined text-lg">edit</span>
-        </button>
-      </div>
-
       {/* Profile Card */}
-      <div className="relative bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-        {/* Profile Header */}
+      <div className="relative bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 backdrop-blur-xl border-2 border-emerald-400/30 rounded-3xl p-6 shadow-2xl">
+        <div className="flex justify-between items-center mb-4 px-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-400/30">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            </span>
+            <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Visible Recruteur</span>
+          </div>
+          <button
+            className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-400/30 text-emerald-300 hover:text-emerald-200 hover:from-emerald-500/30 hover:to-cyan-500/30 transition-all"
+            onClick={() => {
+              setEditingProfile(true);
+              setFormData((prev:any) => ({
+                ...prev,
+                first_name: userData?.user?.first_name || '',
+                last_name: userData?.user?.last_name || '',
+                school: userData?.school || '',
+                school_url: userData?.school_url || '',
+                program: userData?.program || '',
+                year: userData?.year || '',
+                gender: userData?.gender || '',
+                preferences: userData?.preferences || '',
+                availability: userData?.availability || '',
+                duration: userData?.duration || '',
+                education: userData?.education || '',
+                experience: userData?.experience || '',
+                hobbies: userData?.hobbies || '',
+                theme: userData?.theme || 'dark',
+                skills: userData?.skills ? userData.skills.map((s: any) => s.name) : [],
+                linkedin_url: userData?.linkedin_url || '',
+                github_url: userData?.github_url || '',
+                website_url: userData?.website_url || '',
+                location: userData?.location || '',
+                languages: userData?.languages || '',
+                phone: userData?.phone || '',
+                photo_url: userData?.photo_url || null,
+                photo_visible: userData?.photo_visible ?? true,
+              }));
+            }}
+          >
+            <span className="material-symbols-outlined text-lg">edit</span>
+          </button>
+        </div>
+
+        {/* Header with photo */}
         <div className="flex flex-col items-center gap-4 mb-6">
           <div className="relative">
-            {/* Avatar */}
-            <div className={`relative w-32 h-32 rounded-full bg-cover bg-center border-4 border-gradient-to-br from-violet-400 to-fuchsia-400 shadow-2xl transition-all duration-500 ${photoVisible ? 'grayscale-0 opacity-100' : 'grayscale opacity-30'}`}
-              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIgyh970J8ZRbvf_3KpzT_qfnVepKOwF-6xTGoqON5owZfrwVR5MdRLDI7IMXCRP4zSE0FcwOSFwVg_SFBXFYWvRDDVmJ7d-r5JS8MBjoKtDtJfAkLu0GjZeVLeDH02q1rdfVzlldv7Eo0nXG2bG-_BMU4-_c1885UpCDSfmczFN8Hq8GgjpEvv5DsyYQan1wn33_rzUxdUWEoRAFVFqLCvmAE9q4_BT-KM6i4lwHMFUpMNYyKHn96_UGJv7Kg2nm7c0ABlEWegEE")' }}
+            <div
+              className={`relative w-32 h-32 rounded-full bg-cover bg-center border-4 border-gradient-to-br from-emerald-400 to-cyan-400 shadow-2xl transition-all duration-500 ${userData?.photo_visible !== false ? 'grayscale-0 opacity-100' : 'grayscale opacity-30'}`}
+              style={{
+                backgroundImage: userData?.photo_url
+                  ? `url('${userData.photo_url}')`
+                  : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIgyh970J8ZRbvf_3KpzT_qfnVepKOwF-6xTGoqON5owZfrwVR5MdRLDI7IMXCRP4zSE0FcwOSFwVg_SFBXFYWvRDDVmJ7d-r5JS8MBjoKtDtJfAkLu0GjZeVLeDH02q1rdfVzlldv7Eo0nXG2bG-_BMU4-_c1885UpCDSfmczFN8Hq8GgjpEvv5DsyYQan1wn33_rzUxdUWEoRAFVFqLCvmAE9q4_BT-KM6i4lwHMFUpMNYyKHn96_UGJv7Kg2nm7c0ABlEWegEE")',
+              }}
             ></div>
-            {/* Photo Toggle - Bottom Right of Avatar */}
-            <button 
-              className="absolute -bottom-1 -right-1 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 border border-white/20 cursor-pointer hover:bg-slate-700 transition-all"
-              onClick={() => setPhotoVisible(!photoVisible)}
+            <button
+              className={`absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full border shadow-lg flex items-center gap-2 text-[11px] font-semibold transition-all duration-200 ${
+                userData?.photo_visible !== false
+                  ? 'bg-emerald-500 text-emerald-100 border-emerald-400/70 hover:bg-emerald-600'
+                  : 'bg-slate-800 text-slate-200 border-white/15 hover:bg-slate-700'
+              }`}
+              onClick={async () => {
+                const currentValue = userData?.photo_visible !== false;
+                const newValue = !currentValue;
+                
+                // Optimistic update
+                setUserData((prev:any) => ({ ...prev, photo_visible: newValue }));
+                setFormData((prev:any) => ({ ...prev, photo_visible: newValue }));
+                
+                try {
+                  const updated = await api.togglePhotoVisibility();
+                  if (updated && typeof updated === 'object') {
+                    setUserData(updated);
+                    setFormData((prev:any) => ({ ...prev, photo_visible: updated.photo_visible ?? newValue }));
+                  }
+                } catch (err) {
+                  console.error('Toggle photo visibility error:', err);
+                  // Rollback on error
+                  setUserData((prev:any) => ({ ...prev, photo_visible: currentValue }));
+                  setFormData((prev:any) => ({ ...prev, photo_visible: currentValue }));
+                }
+              }}
             >
-              <div className={`w-2 h-2 rounded-full transition-colors ${photoVisible ? 'bg-emerald-400' : 'bg-slate-500'}`}></div>
-              <span className="text-[9px] text-slate-300 font-medium">{photoVisible ? 'Visible' : 'Masquée'}</span>
+              <span className="material-symbols-outlined text-sm">visibility</span>
+              {userData?.photo_visible !== false ? 'Visible' : 'Masqué'}
             </button>
           </div>
 
-          
           <div className="text-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-300 via-fuchsia-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-300 via-cyan-300 to-emerald-300 bg-clip-text text-transparent tracking-tight">
               {userData.user?.first_name} {userData.user?.last_name}
             </h1>
             <p className="text-slate-300 text-sm mt-2">
-              {userData.gender === 'F' ? 'Étudiante' : 'Étudiant'} à <a href={userData.school_url || '#'} target="_blank" rel="noreferrer" className="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline transition-colors">{userData.school || 'École'}</a>
+              {userData.gender === 'F' ? 'Étudiante' : 'Étudiant'} à{' '}
+              <a
+                href={userData.school_url || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline transition-colors"
+              >
+                {userData.school || 'École'}
+              </a>
             </p>
-            <p className="text-slate-400 text-xs mt-1 px-4">
-              {userData.program || 'Formation'}
-            </p>
+            <p className="text-slate-400 text-xs mt-1 px-4">{userData.program || 'Formation'}</p>
           </div>
         </div>
 
@@ -271,7 +303,6 @@ const ProfileScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* CV Extracted Data - Action Button */}
             {cvExtractedData && Object.keys(cvExtractedData).length > 0 && (
               <div className="mb-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-violet-400/30 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -470,7 +501,85 @@ const ProfileScreen: React.FC = () => {
                         </div>
 
                         {/* Content - Scrollable */}
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                          {/* Photo management inside modal */}
+                          <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#1e293b]/60 border border-white/10">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-white">Photo de profil</p>
+                                <p className="text-xs text-slate-400">Importez ou supprimez votre photo depuis cet écran.</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <input
+                                  type="file"
+                                  ref={photoInputRef}
+                                  accept="image/jpeg,image/png,image/gif,image/webp"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setUploadingPhoto(true);
+                                    try {
+                                      const updated = await api.uploadPhoto(file);
+                                      setUserData(updated);
+                                      setFormData((prev:any) => ({...prev, photo_url: updated.photo_url, photo_visible: updated.photo_visible}));
+                                      setConfirmModal({
+                                        show: true,
+                                        title: 'Succès',
+                                        message: 'Votre photo a été mise à jour avec succès.',
+                                        onConfirm: () => setConfirmModal(null)
+                                      });
+                                    } catch (err: any) {
+                                      setConfirmModal({
+                                        show: true,
+                                        title: 'Erreur',
+                                        message: err.message || 'Erreur lors de l\'upload de la photo',
+                                        onConfirm: () => setConfirmModal(null)
+                                      });
+                                    } finally {
+                                      setUploadingPhoto(false);
+                                      if (photoInputRef.current) photoInputRef.current.value = '';
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => photoInputRef.current?.click()}
+                                  disabled={uploadingPhoto}
+                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
+                                >
+                                  {uploadingPhoto ? 'Upload...' : 'Importer'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setConfirmModal({
+                                      show: true,
+                                      title: 'Supprimer la photo',
+                                      message: 'Supprimer définitivement la photo ?',
+                                      onConfirm: async () => {
+                                        try {
+                                          await api.deletePhoto();
+                                          setUserData((prev:any) => ({...prev, photo_url: null, photo: null, photo_visible: false}));
+                                          setFormData((prev:any) => ({...prev, photo_url: null, photo_visible: false}));
+                                          setConfirmModal(null);
+                                        } catch (err: any) {
+                                          setConfirmModal({
+                                            show: true,
+                                            title: 'Erreur',
+                                            message: err.message || 'Erreur lors de la suppression',
+                                            onConfirm: () => setConfirmModal(null)
+                                          });
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 hover:from-red-600 hover:to-rose-600"
+                                >
+                                  Supprimer
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Prénom</label>
@@ -717,7 +826,19 @@ const ProfileScreen: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                       <button 
-                          onClick={() => setFormData({...formData, theme: 'light'})} 
+                          onClick={async () => {
+                            const newTheme = 'light';
+                            setFormData({...formData, theme: newTheme});
+                            try {
+                              const updated = await api.updateCurrentUser({ theme: newTheme });
+                              setUserData(updated);
+                              localStorage.setItem('app_theme', newTheme);
+                              document.documentElement.classList.remove('dark');
+                              document.documentElement.classList.add('light');
+                            } catch (err) {
+                              console.error('Theme update error:', err);
+                            }
+                          }} 
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                               formData.theme === 'light' 
                                   ? 'bg-gradient-to-r from-amber-500/30 to-yellow-500/30 border border-amber-400/50 text-amber-200' 
@@ -727,7 +848,19 @@ const ProfileScreen: React.FC = () => {
                           ☀️ Clair
                       </button>
                       <button 
-                          onClick={() => setFormData({...formData, theme: 'dark'})} 
+                          onClick={async () => {
+                            const newTheme = 'dark';
+                            setFormData({...formData, theme: newTheme});
+                            try {
+                              const updated = await api.updateCurrentUser({ theme: newTheme });
+                              setUserData(updated);
+                              localStorage.setItem('app_theme', newTheme);
+                              document.documentElement.classList.remove('light');
+                              document.documentElement.classList.add('dark');
+                            } catch (err) {
+                              console.error('Theme update error:', err);
+                            }
+                          }} 
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                               formData.theme === 'dark' 
                                   ? 'bg-gradient-to-r from-indigo-500/30 to-purple-500/30 border border-indigo-400/50 text-indigo-200' 
@@ -746,7 +879,13 @@ const ProfileScreen: React.FC = () => {
               <SettingsItem icon="description" label="Conditions d'utilisation" />
           </div>
           
-          <button className="w-full mt-6 py-4 rounded-2xl border-2 border-red-500/30 text-red-400 font-bold text-sm hover:bg-red-500/10 transition-colors">
+          <button
+            className="w-full mt-6 py-4 rounded-2xl border-2 border-red-500/30 text-red-400 font-bold text-sm hover:bg-red-500/10 transition-colors"
+            onClick={async () => {
+              await api.logout();
+              navigate('/login');
+            }}
+          >
               Déconnexion
           </button>
       </div>
@@ -773,18 +912,6 @@ const SocialButton = ({ href, iconSvg, iconName, disabled }: { href: string, ico
             <span className="material-symbols-outlined text-[20px]">{iconName}</span>
         )}
     </a>
-);
-
-const Section = ({ title, icon, content }: { title: string; icon: string; content: string }) => (
-    <div className="bg-[#101722]/30 border border-white/5 p-3 rounded-xl flex items-center gap-3 group hover:bg-[#101722]/50 transition-colors">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-             <span className="material-symbols-outlined text-lg">{icon}</span>
-        </div>
-        <div className="flex-1">
-            <h3 className="text-slate-200 font-bold text-sm">{title}</h3>
-            <p className="text-slate-400 text-xs truncate">{content}</p>
-        </div>
-    </div>
 );
 
 const SettingsItem = ({ icon, label }: { icon: string, label: string }) => (
