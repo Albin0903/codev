@@ -16,6 +16,9 @@ const ProfileScreen: React.FC = () => {
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
   const [cvExtractedData, setCvExtractedData] = useState<any>(null);
   const [showCvImportModal, setShowCvImportModal] = useState(false);
+  const [showPreviewCard, setShowPreviewCard] = useState(false);
+  const [expandedExperience, setExpandedExperience] = useState(false);
+  const [expandedEducation, setExpandedEducation] = useState(false);
   const cvInputRef = React.useRef<HTMLInputElement>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -31,20 +34,20 @@ const ProfileScreen: React.FC = () => {
           school_url: data?.school_url || '',
           availability: data?.availability || '',
           duration: data?.duration || '',
-          education: data?.education || '',
-          experience: data?.experience || '',
-          hobbies: data?.hobbies || '',
+          education: data?.education || [],
+          experience: data?.experience || [],
+          hobbies: data?.hobbies || [],
           theme: data?.theme || 'dark',
           skills: data?.skills ? data.skills.map((s: any) => s.name) : [],
           program: data?.program || '',
           year: data?.year || '',
-          gender: data?.gender || '',
-          preferences: data?.preferences || '',
+          role: data?.role || 'etudiant',
+          about: data?.about || '',
           linkedin_url: data?.linkedin_url || '',
           github_url: data?.github_url || '',
           website_url: data?.website_url || '',
           location: data?.location || '',
-          languages: data?.languages || '',
+          languages: data?.languages || [],
           phone: data?.phone || '',
           photo_url: data?.photo_url || null,
           photo_visible: data?.photo_visible ?? true,
@@ -95,84 +98,99 @@ const ProfileScreen: React.FC = () => {
             </span>
             <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Visible Recruteur</span>
           </div>
-          <button
-            className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-400/30 text-emerald-300 hover:text-emerald-200 hover:from-emerald-500/30 hover:to-cyan-500/30 transition-all"
-            onClick={() => {
-              setEditingProfile(true);
-              setFormData((prev:any) => ({
-                ...prev,
-                first_name: userData?.user?.first_name || '',
-                last_name: userData?.user?.last_name || '',
-                school: userData?.school || '',
-                school_url: userData?.school_url || '',
-                program: userData?.program || '',
-                year: userData?.year || '',
-                gender: userData?.gender || '',
-                preferences: userData?.preferences || '',
-                availability: userData?.availability || '',
-                duration: userData?.duration || '',
-                education: userData?.education || '',
-                experience: userData?.experience || '',
-                hobbies: userData?.hobbies || '',
-                theme: userData?.theme || 'dark',
-                skills: userData?.skills ? userData.skills.map((s: any) => s.name) : [],
-                linkedin_url: userData?.linkedin_url || '',
-                github_url: userData?.github_url || '',
-                website_url: userData?.website_url || '',
-                location: userData?.location || '',
-                languages: userData?.languages || '',
-                phone: userData?.phone || '',
-                photo_url: userData?.photo_url || null,
-                photo_visible: userData?.photo_visible ?? true,
-              }));
-            }}
-          >
-            <span className="material-symbols-outlined text-lg">edit</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-400/30 text-violet-300 hover:text-violet-200 hover:from-violet-500/30 hover:to-fuchsia-500/30 transition-all"
+              onClick={() => setShowPreviewCard(true)}
+              title="Voir comme les recruteurs"
+            >
+              <span className="material-symbols-outlined text-lg">visibility</span>
+            </button>
+            <button
+              className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-400/30 text-emerald-300 hover:text-emerald-200 hover:from-emerald-500/30 hover:to-cyan-500/30 transition-all"
+              onClick={() => {
+                setEditingProfile(true);
+                setFormData((prev:any) => ({
+                  ...prev,
+                  first_name: userData?.user?.first_name || '',
+                  last_name: userData?.user?.last_name || '',
+                  school: userData?.school || '',
+                  school_url: userData?.school_url || '',
+                  program: userData?.program || '',
+                  year: userData?.year || '',
+                  role: userData?.role || 'etudiant',
+                  about: userData?.about || '',
+                  availability: userData?.availability || '',
+                  duration: userData?.duration || '',
+                  education: userData?.education || [],
+                  experience: userData?.experience || [],
+                  hobbies: userData?.hobbies || [],
+                  theme: userData?.theme || 'dark',
+                  skills: userData?.skills ? userData.skills.map((s: any) => s.name) : [],
+                  linkedin_url: userData?.linkedin_url || '',
+                  github_url: userData?.github_url || '',
+                  website_url: userData?.website_url || '',
+                  location: userData?.location || '',
+                  languages: userData?.languages || [],
+                  phone: userData?.phone || '',
+                  photo_url: userData?.photo_url || null,
+                  photo_visible: userData?.photo_visible ?? true,
+                }));
+              }}
+            >
+              <span className="material-symbols-outlined text-lg">edit</span>
+            </button>
+          </div>
         </div>
 
         {/* Header with photo */}
         <div className="flex flex-col items-center gap-4 mb-6">
           <div className="relative">
-            <div
-              className={`relative w-32 h-32 rounded-full bg-cover bg-center border-4 border-gradient-to-br from-emerald-400 to-cyan-400 shadow-2xl transition-all duration-500 ${userData?.photo_visible !== false ? 'grayscale-0 opacity-100' : 'grayscale opacity-30'}`}
-              style={{
-                backgroundImage: userData?.photo_url
-                  ? `url('${userData.photo_url}')`
-                  : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIgyh970J8ZRbvf_3KpzT_qfnVepKOwF-6xTGoqON5owZfrwVR5MdRLDI7IMXCRP4zSE0FcwOSFwVg_SFBXFYWvRDDVmJ7d-r5JS8MBjoKtDtJfAkLu0GjZeVLeDH02q1rdfVzlldv7Eo0nXG2bG-_BMU4-_c1885UpCDSfmczFN8Hq8GgjpEvv5DsyYQan1wn33_rzUxdUWEoRAFVFqLCvmAE9q4_BT-KM6i4lwHMFUpMNYyKHn96_UGJv7Kg2nm7c0ABlEWegEE")',
-              }}
-            ></div>
-            <button
-              className={`absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full border shadow-lg flex items-center gap-2 text-[11px] font-semibold transition-all duration-200 ${
-                userData?.photo_visible !== false
-                  ? 'bg-emerald-500 text-emerald-100 border-emerald-400/70 hover:bg-emerald-600'
-                  : 'bg-slate-800 text-slate-200 border-white/15 hover:bg-slate-700'
-              }`}
-              onClick={async () => {
-                const currentValue = userData?.photo_visible !== false;
-                const newValue = !currentValue;
-                
-                // Optimistic update
-                setUserData((prev:any) => ({ ...prev, photo_visible: newValue }));
-                setFormData((prev:any) => ({ ...prev, photo_visible: newValue }));
-                
-                try {
-                  const updated = await api.togglePhotoVisibility();
-                  if (updated && typeof updated === 'object') {
-                    setUserData(updated);
-                    setFormData((prev:any) => ({ ...prev, photo_visible: updated.photo_visible ?? newValue }));
+            {userData?.photo_url ? (
+              <div
+                className={`relative w-32 h-32 rounded-full bg-cover bg-center border-4 border-gradient-to-br from-emerald-400 to-cyan-400 shadow-2xl transition-all duration-500 ${userData?.photo_visible !== false ? 'grayscale-0 opacity-100' : 'grayscale opacity-30'}`}
+                style={{ backgroundImage: `url('${userData.photo_url}')` }}
+              ></div>
+            ) : (
+              <div className="relative w-32 h-32 rounded-full border-4 border-gradient-to-br from-emerald-400 to-cyan-400 shadow-2xl bg-slate-800 flex items-center justify-center">
+                <span className="text-3xl font-bold text-slate-200">
+                  {`${(userData?.user?.first_name || '').charAt(0) || ''}${(userData?.user?.last_name || '').charAt(0) || ''}`.toUpperCase() || '?'}
+                </span>
+              </div>
+            )}
+            {userData?.photo_url && (
+              <button
+                className={`absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full border shadow-lg flex items-center gap-2 text-[11px] font-semibold transition-all duration-200 ${
+                  userData?.photo_visible !== false
+                    ? 'bg-emerald-500 text-emerald-100 border-emerald-400/70 hover:bg-emerald-600'
+                    : 'bg-slate-800 text-slate-200 border-white/15 hover:bg-slate-700'
+                }`}
+                onClick={async () => {
+                  const currentValue = userData?.photo_visible !== false;
+                  const newValue = !currentValue;
+                  
+                  // Optimistic update
+                  setUserData((prev:any) => ({ ...prev, photo_visible: newValue }));
+                  setFormData((prev:any) => ({ ...prev, photo_visible: newValue }));
+                  
+                  try {
+                    const updated = await api.togglePhotoVisibility();
+                    if (updated && typeof updated === 'object') {
+                      setUserData(updated);
+                      setFormData((prev:any) => ({ ...prev, photo_visible: updated.photo_visible ?? newValue }));
+                    }
+                  } catch (err) {
+                    console.error('Toggle photo visibility error:', err);
+                    // Rollback on error
+                    setUserData((prev:any) => ({ ...prev, photo_visible: currentValue }));
+                    setFormData((prev:any) => ({ ...prev, photo_visible: currentValue }));
                   }
-                } catch (err) {
-                  console.error('Toggle photo visibility error:', err);
-                  // Rollback on error
-                  setUserData((prev:any) => ({ ...prev, photo_visible: currentValue }));
-                  setFormData((prev:any) => ({ ...prev, photo_visible: currentValue }));
-                }
-              }}
-            >
-              <span className="material-symbols-outlined text-sm">visibility</span>
-              {userData?.photo_visible !== false ? 'Visible' : 'Masqué'}
-            </button>
+                }}
+              >
+                <span className="material-symbols-outlined text-sm">visibility</span>
+                {userData?.photo_visible !== false ? 'Visible' : 'Masqué'}
+              </button>
+            )}
           </div>
 
           <div className="text-center">
@@ -180,7 +198,7 @@ const ProfileScreen: React.FC = () => {
               {userData.user?.first_name} {userData.user?.last_name}
             </h1>
             <p className="text-slate-300 text-sm mt-2">
-              {userData.gender === 'F' ? 'Étudiante' : 'Étudiant'} à{' '}
+              {userData.role || 'Étudiant'}{userData.year ? ` en ${userData.year}` : ''} à{' '}
               <a
                 href={userData.school_url || '#'}
                 target="_blank"
@@ -190,7 +208,7 @@ const ProfileScreen: React.FC = () => {
                 {userData.school || 'École'}
               </a>
             </p>
-            <p className="text-slate-400 text-xs mt-1 px-4">{userData.program || 'Formation'}</p>
+            {userData.program && <p className="text-slate-400 text-xs mt-1 px-4">{userData.program}</p>}
           </div>
         </div>
 
@@ -350,22 +368,37 @@ const ProfileScreen: React.FC = () => {
                     <div className="space-y-3">
                       {/* Define all fields to check */}
                       {[
+                        { key: 'program', label: 'Formation', icon: 'menu_book', color: 'emerald' },
+                        { key: 'year', label: 'Année', icon: 'school', color: 'blue' },
+                        { key: 'role', label: 'Statut', icon: 'badge', color: 'violet' },
                         { key: 'linkedin_url', label: 'LinkedIn', icon: 'link', color: 'blue' },
                         { key: 'github_url', label: 'GitHub', icon: 'code', color: 'slate' },
                         { key: 'website_url', label: 'Site web', icon: 'public', color: 'cyan' },
                         { key: 'phone', label: 'Téléphone', icon: 'phone', color: 'amber' },
                         { key: 'location', label: 'Localisation', icon: 'location_on', color: 'pink' },
+                        { key: 'about', label: 'À propos', icon: 'person', color: 'violet' },
+                        { key: 'availability', label: 'Disponibilité', icon: 'calendar_today', color: 'emerald' },
+                        { key: 'duration', label: 'Durée', icon: 'hourglass_top', color: 'orange' },
                         { key: 'languages', label: 'Langues', icon: 'translate', color: 'violet' },
                         { key: 'education', label: 'Éducation', icon: 'school', color: 'blue' },
                         { key: 'experience', label: 'Expérience', icon: 'work', color: 'amber' },
+                        { key: 'hobbies', label: 'Loisirs', icon: 'interests', color: 'rose' },
                         { key: 'skills', label: 'Compétences', icon: 'psychology', color: 'cyan' },
                       ].map((field) => {
-                        const hasValue = field.key === 'skills' 
-                          ? cvExtractedData.skills && cvExtractedData.skills.length > 0
+                        const hasValue = Array.isArray(cvExtractedData[field.key]) 
+                          ? cvExtractedData[field.key].length > 0
                           : !!cvExtractedData[field.key];
-                        const value = field.key === 'skills'
-                          ? cvExtractedData.skills?.join(', ')
-                          : cvExtractedData[field.key];
+                        
+                        let valueDisplay = cvExtractedData[field.key];
+                        if (Array.isArray(valueDisplay)) {
+                            if (field.key === 'education' || field.key === 'experience') {
+                                valueDisplay = `${valueDisplay.length} élément(s) extrait(s)`;
+                            } else if (field.key === 'languages') {
+                                valueDisplay = valueDisplay.map((l:any) => l.language).join(', ');
+                            } else {
+                                valueDisplay = valueDisplay.join(', ');
+                            }
+                        }
                         
                         return (
                           <div 
@@ -390,7 +423,7 @@ const ProfileScreen: React.FC = () => {
                               )}
                             </div>
                             {hasValue ? (
-                              <p className="text-slate-300 text-xs truncate pl-6">{value}</p>
+                              <p className="text-slate-300 text-xs truncate pl-6">{valueDisplay}</p>
                             ) : (
                               <p className="text-slate-500 text-xs italic pl-6">Aucune donnée extraite du CV</p>
                             )}
@@ -413,25 +446,26 @@ const ProfileScreen: React.FC = () => {
                           if (cvExtractedData.website_url) payload.website_url = cvExtractedData.website_url;
                           if (cvExtractedData.phone) payload.phone = cvExtractedData.phone;
                           if (cvExtractedData.location) payload.location = cvExtractedData.location;
+                          if (cvExtractedData.about) payload.about = cvExtractedData.about;
+                          if (cvExtractedData.availability) payload.availability = cvExtractedData.availability;
+                          if (cvExtractedData.duration) payload.duration = cvExtractedData.duration;
+                          if (cvExtractedData.program) payload.program = cvExtractedData.program;
+                          if (cvExtractedData.year) payload.year = cvExtractedData.year;
+                          if (cvExtractedData.role) payload.role = cvExtractedData.role;
                           if (cvExtractedData.languages) payload.languages = cvExtractedData.languages;
                           if (cvExtractedData.education) payload.education = cvExtractedData.education;
                           if (cvExtractedData.experience) payload.experience = cvExtractedData.experience;
-                          if (cvExtractedData.skills && cvExtractedData.skills.length > 0) {
+                          if (cvExtractedData.hobbies) payload.hobbies = cvExtractedData.hobbies;
+                          if (cvExtractedData.skills && Array.isArray(cvExtractedData.skills) && cvExtractedData.skills.length > 0) {
+                            // Skills sont déjà un array de strings
                             payload.skills = cvExtractedData.skills;
                           }
 
+                          console.log('CV Import payload:', payload);
                           const updated = await api.updateCurrentUser(payload);
                           setUserData(updated);
                           setShowCvImportModal(false);
                           setCvExtractedData(null);
-                          
-                          // Show success
-                          setConfirmModal({
-                            show: true,
-                            title: 'Profil mis à jour !',
-                            message: 'Les informations de votre CV ont été importées avec succès.',
-                            onConfirm: () => setConfirmModal(null)
-                          });
                         } catch (err) {
                           console.error('Erreur import CV:', err);
                           setConfirmModal({
@@ -504,78 +538,86 @@ const ProfileScreen: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                           {/* Photo management inside modal */}
                           <div className="flex flex-col gap-3 p-4 rounded-2xl bg-[#1e293b]/60 border border-white/10">
-                            <div className="flex items-center justify-between">
-                              <div>
+                            <div className="flex items-center justify-between flex-col md:flex-row gap-4">
+                              <div className="flex-1">
                                 <p className="text-sm font-semibold text-white">Photo de profil</p>
-                                <p className="text-xs text-slate-400">Importez ou supprimez votre photo depuis cet écran.</p>
                               </div>
-                              <div className="flex gap-2">
-                                <input
-                                  type="file"
-                                  ref={photoInputRef}
-                                  accept="image/jpeg,image/png,image/gif,image/webp"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    setUploadingPhoto(true);
-                                    try {
-                                      const updated = await api.uploadPhoto(file);
-                                      setUserData(updated);
-                                      setFormData((prev:any) => ({...prev, photo_url: updated.photo_url, photo_visible: updated.photo_visible}));
-                                      setConfirmModal({
-                                        show: true,
-                                        title: 'Succès',
-                                        message: 'Votre photo a été mise à jour avec succès.',
-                                        onConfirm: () => setConfirmModal(null)
-                                      });
-                                    } catch (err: any) {
-                                      setConfirmModal({
-                                        show: true,
-                                        title: 'Erreur',
-                                        message: err.message || 'Erreur lors de l\'upload de la photo',
-                                        onConfirm: () => setConfirmModal(null)
-                                      });
-                                    } finally {
-                                      setUploadingPhoto(false);
-                                      if (photoInputRef.current) photoInputRef.current.value = '';
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={() => photoInputRef.current?.click()}
-                                  disabled={uploadingPhoto}
-                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
-                                >
-                                  {uploadingPhoto ? 'Upload...' : 'Importer'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setConfirmModal({
-                                      show: true,
-                                      title: 'Supprimer la photo',
-                                      message: 'Supprimer définitivement la photo ?',
-                                      onConfirm: async () => {
-                                        try {
-                                          await api.deletePhoto();
-                                          setUserData((prev:any) => ({...prev, photo_url: null, photo: null, photo_visible: false}));
-                                          setFormData((prev:any) => ({...prev, photo_url: null, photo_visible: false}));
-                                          setConfirmModal(null);
-                                        } catch (err: any) {
-                                          setConfirmModal({
-                                            show: true,
-                                            title: 'Erreur',
-                                            message: err.message || 'Erreur lors de la suppression',
-                                            onConfirm: () => setConfirmModal(null)
-                                          });
-                                        }
+                              
+                              <div className="flex items-center gap-4">
+                                {formData.photo_url && (
+                                  <div className="flex-shrink-0">
+                                    <div
+                                      className="w-16 h-16 rounded-xl bg-cover bg-center border-2 border-emerald-400/30 shadow-lg"
+                                      style={{ backgroundImage: `url('${formData.photo_url}')` }}
+                                    ></div>
+                                  </div>
+                                )}
+                                
+                                <div className="flex gap-2">
+                                  <input
+                                    type="file"
+                                    ref={photoInputRef}
+                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      setUploadingPhoto(true);
+                                      try {
+                                        const updated = await api.uploadPhoto(file);
+                                        setUserData(updated);
+                                        setFormData((prev:any) => ({...prev, photo_url: updated.photo_url, photo_visible: updated.photo_visible}));
+                                      } catch (err: any) {
+                                        setConfirmModal({
+                                          show: true,
+                                          title: 'Erreur',
+                                          message: err.message || 'Erreur lors de l\'upload de la photo',
+                                          onConfirm: () => setConfirmModal(null)
+                                        });
+                                      } finally {
+                                        setUploadingPhoto(false);
+                                        if (photoInputRef.current) photoInputRef.current.value = '';
                                       }
-                                    });
-                                  }}
-                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 hover:from-red-600 hover:to-rose-600"
-                                >
-                                  Supprimer
-                                </button>
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => photoInputRef.current?.click()}
+                                    disabled={uploadingPhoto}
+                                    className="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
+                                  >
+                                    {uploadingPhoto ? 'Upload...' : 'Importer'}
+                                  </button>
+                                  
+                                  {formData.photo_url && (
+                                    <button
+                                      onClick={() => {
+                                        setConfirmModal({
+                                          show: true,
+                                          title: 'Supprimer la photo',
+                                          message: 'Supprimer définitivement la photo ?',
+                                          onConfirm: async () => {
+                                            try {
+                                              await api.deletePhoto();
+                                              setUserData((prev:any) => ({...prev, photo_url: null, photo: null, photo_visible: false}));
+                                              setFormData((prev:any) => ({...prev, photo_url: null, photo_visible: false}));
+                                              setConfirmModal(null);
+                                            } catch (err: any) {
+                                              setConfirmModal({
+                                                show: true,
+                                                title: 'Erreur',
+                                                message: err.message || 'Erreur lors de la suppression',
+                                                onConfirm: () => setConfirmModal(null)
+                                              });
+                                            }
+                                          }
+                                        });
+                                      }}
+                                      className="px-3 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 hover:from-red-600 hover:to-rose-600"
+                                    >
+                                      Supprimer
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -614,32 +656,214 @@ const ProfileScreen: React.FC = () => {
                               <input className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Genre</label>
-                              <select className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                                <option value="M">Homme</option>
-                                <option value="F">Femme</option>
-                                <option value="O">Autre</option>
-                              </select>
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Statut</label>
+                              <input className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} />
                             </div>
                             <div className="col-span-1 md:col-span-2">
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">À propos</label>
-                              <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={3} value={formData.preferences} onChange={(e) => setFormData({...formData, preferences: e.target.value})} />
+                              <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={3} value={formData.about} onChange={(e) => setFormData({...formData, about: e.target.value})} />
                             </div>
                             <div className="col-span-1 md:col-span-2">
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Compétences (séparées par des virgules)</label>
                               <input className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" value={(formData.skills||[]).join(', ')} onChange={(e) => setFormData({...formData, skills: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean)})} />
                             </div>
-                            <div className="col-span-1 md:col-span-2">
-                              <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Éducation</label>
-                              <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={2} value={formData.education} onChange={(e) => setFormData({...formData, education: e.target.value})} />
+                            
+                            {/* Section Expérience */}
+                            <div className="col-span-1 md:col-span-2 pt-4 border-t border-white/5">
+                              <h4 className="text-sm font-bold text-amber-300 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">work</span>
+                                Expérience professionnelle
+                              </h4>
+                              <div className="space-y-3">
+                                {Array.isArray(formData.experience) && formData.experience.map((exp: any, idx: number) => (
+                                  <div key={idx} className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                                    <div className="flex gap-2">
+                                      <input 
+                                        placeholder="Poste" 
+                                        className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={exp.position || ''} 
+                                        onChange={(e) => {
+                                          const newExp = [...formData.experience];
+                                          newExp[idx] = {...newExp[idx], position: e.target.value};
+                                          setFormData({...formData, experience: newExp});
+                                        }} 
+                                      />
+                                      <button 
+                                        onClick={() => {
+                                          const newExp = formData.experience.filter((_:any, i:number) => i !== idx);
+                                          setFormData({...formData, experience: newExp});
+                                        }}
+                                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                      </button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <input 
+                                        placeholder="Entreprise" 
+                                        className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={exp.company || ''} 
+                                        onChange={(e) => {
+                                          const newExp = [...formData.experience];
+                                          newExp[idx] = {...newExp[idx], company: e.target.value};
+                                          setFormData({...formData, experience: newExp});
+                                        }} 
+                                      />
+                                      <input 
+                                        placeholder="Durée (ex: 6 mois)" 
+                                        className="w-32 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={exp.duration || ''} 
+                                        onChange={(e) => {
+                                          const newExp = [...formData.experience];
+                                          newExp[idx] = {...newExp[idx], duration: e.target.value};
+                                          setFormData({...formData, experience: newExp});
+                                        }} 
+                                      />
+                                    </div>
+                                    <textarea 
+                                      placeholder="Description (optionnel)" 
+                                      className="w-full p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm resize-none" 
+                                      rows={2}
+                                      value={exp.description || ''} 
+                                      onChange={(e) => {
+                                        const newExp = [...formData.experience];
+                                        newExp[idx] = {...newExp[idx], description: e.target.value};
+                                        setFormData({...formData, experience: newExp});
+                                      }} 
+                                    />
+                                  </div>
+                                ))}
+                                <button 
+                                  onClick={() => setFormData({...formData, experience: [...(formData.experience || []), {position: '', company: '', duration: '', description: ''}]})}
+                                  className="w-full py-2 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 flex items-center justify-center gap-2"
+                                >
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                  Ajouter une expérience
+                                </button>
+                              </div>
                             </div>
-                            <div className="col-span-1 md:col-span-2">
-                              <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Expérience</label>
-                              <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={2} value={formData.experience} onChange={(e) => setFormData({...formData, experience: e.target.value})} />
+                            
+                            {/* Section Éducation */}
+                            <div className="col-span-1 md:col-span-2 pt-4 border-t border-white/5">
+                              <h4 className="text-sm font-bold text-blue-300 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">school</span>
+                                Formation
+                              </h4>
+                              <div className="space-y-3">
+                                {Array.isArray(formData.education) && formData.education.map((edu: any, idx: number) => (
+                                  <div key={idx} className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 space-y-2">
+                                    <div className="flex gap-2">
+                                      <input 
+                                        placeholder="Diplôme" 
+                                        className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={edu.degree || ''} 
+                                        onChange={(e) => {
+                                          const newEdu = [...formData.education];
+                                          newEdu[idx] = {...newEdu[idx], degree: e.target.value};
+                                          setFormData({...formData, education: newEdu});
+                                        }} 
+                                      />
+                                      <button 
+                                        onClick={() => {
+                                          const newEdu = formData.education.filter((_:any, i:number) => i !== idx);
+                                          setFormData({...formData, education: newEdu});
+                                        }}
+                                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                      </button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <input 
+                                        placeholder="École" 
+                                        className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={edu.school || ''} 
+                                        onChange={(e) => {
+                                          const newEdu = [...formData.education];
+                                          newEdu[idx] = {...newEdu[idx], school: e.target.value};
+                                          setFormData({...formData, education: newEdu});
+                                        }} 
+                                      />
+                                      <input 
+                                        placeholder="Année (ex: 2024)" 
+                                        className="w-28 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                        value={edu.year || ''} 
+                                        onChange={(e) => {
+                                          const newEdu = [...formData.education];
+                                          newEdu[idx] = {...newEdu[idx], year: e.target.value};
+                                          setFormData({...formData, education: newEdu});
+                                        }} 
+                                      />
+                                    </div>
+                                    <textarea 
+                                      placeholder="Description (optionnel)" 
+                                      className="w-full p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm resize-none" 
+                                      rows={2}
+                                      value={edu.description || ''} 
+                                      onChange={(e) => {
+                                        const newEdu = [...formData.education];
+                                        newEdu[idx] = {...newEdu[idx], description: e.target.value};
+                                        setFormData({...formData, education: newEdu});
+                                      }} 
+                                    />
+                                  </div>
+                                ))}
+                                <button 
+                                  onClick={() => setFormData({...formData, education: [...(formData.education || []), {degree: '', school: '', year: '', description: ''}]})}
+                                  className="w-full py-2 rounded-lg bg-blue-500/20 text-blue-300 text-sm font-medium hover:bg-blue-500/30 flex items-center justify-center gap-2"
+                                >
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                  Ajouter une formation
+                                </button>
+                              </div>
                             </div>
-                            <div className="col-span-1 md:col-span-2">
-                              <label className="block text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">Loisirs</label>
-                              <textarea className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" rows={2} value={formData.hobbies} onChange={(e) => setFormData({...formData, hobbies: e.target.value})} />
+                            
+                            {/* Section Loisirs */}
+                            <div className="col-span-1 md:col-span-2 pt-4 border-t border-white/5">
+                              <h4 className="text-sm font-bold text-rose-300 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">interests</span>
+                                Loisirs
+                              </h4>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {Array.isArray(formData.hobbies) && formData.hobbies.map((hobby: string, idx: number) => (
+                                  <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">
+                                    {hobby}
+                                    <button 
+                                      onClick={() => {
+                                        const newHobbies = formData.hobbies.filter((_:any, i:number) => i !== idx);
+                                        setFormData({...formData, hobbies: newHobbies});
+                                      }}
+                                      className="ml-1 text-rose-400 hover:text-rose-200"
+                                    >
+                                      <span className="material-symbols-outlined text-xs">close</span>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <input 
+                                  placeholder="Ajouter un loisir" 
+                                  className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 text-sm" 
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                                      setFormData({...formData, hobbies: [...(formData.hobbies || []), (e.target as HTMLInputElement).value.trim()]});
+                                      (e.target as HTMLInputElement).value = '';
+                                    }
+                                  }}
+                                />
+                                <button 
+                                  onClick={(e) => {
+                                    const input = (e.target as HTMLElement).parentElement?.querySelector('input');
+                                    if (input && input.value.trim()) {
+                                      setFormData({...formData, hobbies: [...(formData.hobbies || []), input.value.trim()]});
+                                      input.value = '';
+                                    }
+                                  }}
+                                  className="px-4 py-2 rounded-lg bg-rose-500/20 text-rose-300 text-sm font-medium hover:bg-rose-500/30"
+                                >
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                </button>
+                              </div>
                             </div>
                             
                             {/* Section Liens sociaux */}
@@ -673,9 +897,59 @@ const ProfileScreen: React.FC = () => {
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-pink-400 mb-1.5">Localisation</label>
                               <input placeholder="Lyon, France" className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-pink-400 focus:ring-1 focus:ring-pink-400 outline-none transition-all" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
                             </div>
-                            <div>
+                            <div className="col-span-1 md:col-span-2">
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-violet-400 mb-1.5">Langues</label>
-                              <input placeholder="Français, Anglais" className="w-full p-3 rounded-xl bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-violet-400 focus:ring-1 focus:ring-violet-400 outline-none transition-all" value={formData.languages} onChange={(e) => setFormData({...formData, languages: e.target.value})} />
+                              <div className="space-y-2">
+                                {Array.isArray(formData.languages) && formData.languages.map((lang: any, idx: number) => (
+                                  <div key={idx} className="flex gap-2 items-center">
+                                    <input 
+                                      placeholder="Langue (ex: Français)" 
+                                      className="flex-1 p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white placeholder:text-slate-600 focus:border-violet-400 focus:ring-1 focus:ring-violet-400 outline-none transition-all text-sm" 
+                                      value={lang.language || ''} 
+                                      onChange={(e) => {
+                                        const newLangs = [...formData.languages];
+                                        newLangs[idx] = {...newLangs[idx], language: e.target.value};
+                                        setFormData({...formData, languages: newLangs});
+                                      }} 
+                                    />
+                                    <select 
+                                      className="p-2 rounded-lg bg-[#1e293b]/50 border border-white/10 text-white focus:border-violet-400 focus:ring-1 focus:ring-violet-400 outline-none transition-all text-sm appearance-none"
+                                      value={lang.level || 'Courant'}
+                                      onChange={(e) => {
+                                        const newLangs = [...formData.languages];
+                                        newLangs[idx] = {...newLangs[idx], level: e.target.value};
+                                        setFormData({...formData, languages: newLangs});
+                                      }}
+                                    >
+                                      <option value="Natif">Natif</option>
+                                      <option value="Courant">Courant</option>
+                                      <option value="Intermédiaire">Intermédiaire</option>
+                                      <option value="Débutant">Débutant</option>
+                                    </select>
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newLangs = formData.languages.filter((_: any, i: number) => i !== idx);
+                                        setFormData({...formData, languages: newLangs});
+                                      }}
+                                      className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">close</span>
+                                    </button>
+                                  </div>
+                                ))}
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const newLangs = [...(formData.languages || []), {language: '', level: 'Courant'}];
+                                    setFormData({...formData, languages: newLangs});
+                                  }}
+                                  className="w-full p-2 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm font-medium hover:bg-violet-500/20 transition flex items-center justify-center gap-2"
+                                >
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                  Ajouter une langue
+                                </button>
+                              </div>
                             </div>
                             <div className="col-span-1 md:col-span-2">
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1.5">Téléphone</label>
@@ -692,22 +966,22 @@ const ProfileScreen: React.FC = () => {
                                 // Build payload: include user fields at top-level so backend will update user and student
                                 const payload: any = {
                                   school: formData.school,
-                                  school_url: formData.school_url || '',
+                                  school_url: formData.school_url || null,
                                   program: formData.program,
                                   year: formData.year,
-                                  gender: formData.gender,
-                                  preferences: formData.preferences,
+                                  role: formData.role,
+                                  about: formData.about,
                                   availability: formData.availability,
                                   duration: formData.duration,
                                   education: formData.education,
                                   experience: formData.experience,
                                   hobbies: formData.hobbies,
                                   theme: formData.theme,
-                                  linkedin_url: formData.linkedin_url || '',
-                                  github_url: formData.github_url || '',
-                                  website_url: formData.website_url || '',
+                                  linkedin_url: formData.linkedin_url || null,
+                                  github_url: formData.github_url || null,
+                                  website_url: formData.website_url || null,
                                   location: formData.location || '',
-                                  languages: formData.languages || '',
+                                  languages: formData.languages || [],
                                   phone: formData.phone || '',
                                 };
                                 // include user fields to update separately
@@ -730,6 +1004,185 @@ const ProfileScreen: React.FC = () => {
                       document.getElementById('app-modal-container') || document.body
                     )}
 
+        {/* Preview Card Modal - Shows how recruiters see the profile */}
+        {showPreviewCard && createPortal(
+          <div className="absolute inset-0 z-[100] flex items-center justify-center backdrop-blur-sm pointer-events-auto">
+            <div className="w-[90%] max-w-md h-[85%] flex flex-col bg-[#0f172a]/95 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden">
+              
+              {/* Header - Fixed */}
+              <div className="flex justify-between items-center p-4 border-b border-white/5 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-violet-400">visibility</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Aperçu recruteur</h3>
+                    <p className="text-slate-400 text-xs">Ce que voient les entreprises</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowPreviewCard(false)} 
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              {/* Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {/* Card Preview */}
+                <div className="flex flex-col bg-[#1E293B] rounded-2xl overflow-hidden border border-white/10">
+                  
+                  {/* Header with Avatar/Photo */}
+                  <div className="w-full py-4 px-5 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center border-b border-white/5">
+                    <div className="flex items-center gap-4 w-full">
+                      {userData?.photo_visible !== false && userData?.photo_url ? (
+                        <img 
+                          src={userData.photo_url} 
+                          alt="Photo"
+                          className="h-14 w-14 rounded-xl object-cover border-2 border-white/10 shadow-lg"
+                        />
+                      ) : (
+                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white text-xl font-bold shadow-lg border-2 border-white/10">
+                          {userData?.user?.first_name?.[0]}{userData?.user?.last_name?.[0]}
+                        </div>
+                      )}
+                      <div className="flex flex-col overflow-hidden">
+                        <h2 className="text-white text-lg font-bold leading-tight truncate">
+                          {userData?.user?.first_name} {userData?.user?.last_name}
+                        </h2>
+                        <p className="text-slate-300 text-sm truncate">{userData?.program}</p>
+                        <p className="text-slate-400 text-xs truncate">{userData?.role || 'Étudiant'}{userData?.year ? ` • ${userData.year}` : ''} • {userData?.school}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Info Cards Row */}
+                  <div className="flex gap-2 p-4 border-b border-white/5">
+                    {userData?.location && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-pink-500/10 border border-pink-500/20">
+                        <span className="material-symbols-outlined text-xs text-pink-400">location_on</span>
+                        <span className="text-slate-300 text-xs">{userData.location}</span>
+                      </div>
+                    )}
+                    {userData?.availability && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <span className="material-symbols-outlined text-xs text-emerald-400">schedule</span>
+                        <span className="text-slate-300 text-xs">{userData.availability}</span>
+                      </div>
+                    )}
+                    {userData?.duration && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <span className="material-symbols-outlined text-xs text-cyan-400">hourglass_top</span>
+                        <span className="text-slate-300 text-xs">{userData.duration}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Skills */}
+                  {userData?.skills && userData.skills.length > 0 && (
+                    <div className="px-4 py-3 border-b border-white/5">
+                      <h3 className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-2">Compétences</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {userData.skills.slice(0, 6).map((skill: any) => (
+                          <span 
+                            key={skill.id} 
+                            className="px-2.5 py-1 rounded-full text-[10px] font-bold border bg-primary/10 text-primary border-primary/30"
+                          >
+                            {skill.name}
+                          </span>
+                        ))}
+                        {userData.skills.length > 6 && (
+                          <span className="px-2 py-1 text-[10px] text-slate-500">+{userData.skills.length - 6}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Experience - Highlighted */}
+                  {Array.isArray(userData?.experience) && userData.experience.length > 0 && (
+                    <div className="px-4 py-3 border-b border-white/5 bg-amber-500/5">
+                      <h3 className="text-amber-300 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-sm">work</span>
+                        Expérience
+                      </h3>
+                      <div className="space-y-2">
+                        {userData.experience.slice(0, 2).map((exp: any, i: number) => (
+                          <div key={i} className="bg-amber-500/10 rounded-lg p-2.5 border border-amber-500/20">
+                            <p className="text-amber-100 font-bold text-sm">{exp.position}</p>
+                            <p className="text-slate-400 text-xs">{exp.company} • {exp.duration}</p>
+                          </div>
+                        ))}
+                        {userData.experience.length > 2 && (
+                          <p className="text-slate-500 text-xs text-center">+{userData.experience.length - 2} autre(s) expérience(s)</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Education - Highlighted */}
+                  {Array.isArray(userData?.education) && userData.education.length > 0 && (
+                    <div className="px-4 py-3 border-b border-white/5 bg-blue-500/5">
+                      <h3 className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-sm">school</span>
+                        Formation
+                      </h3>
+                      <div className="space-y-2">
+                        {userData.education.slice(0, 2).map((edu: any, i: number) => (
+                          <div key={i} className="bg-blue-500/10 rounded-lg p-2.5 border border-blue-500/20">
+                            <p className="text-blue-100 font-bold text-sm">{edu.degree}</p>
+                            <p className="text-slate-400 text-xs">{edu.school} • {edu.year}</p>
+                          </div>
+                        ))}
+                        {userData.education.length > 2 && (
+                          <p className="text-slate-500 text-xs text-center">+{userData.education.length - 2} autre(s) formation(s)</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* About - Compact */}
+                  {userData?.about && (
+                    <div className="px-4 py-3 border-b border-white/5">
+                      <h3 className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-1.5">À propos</h3>
+                      <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">
+                        {userData.about}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Social Links */}
+                  <div className="flex gap-2 p-4">
+                    {userData?.linkedin_url && (
+                      <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium">
+                        <span className="material-symbols-outlined text-sm">link</span>
+                        LinkedIn
+                      </div>
+                    )}
+                    {userData?.github_url && (
+                      <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-500/10 border border-slate-500/20 text-slate-300 text-xs font-medium">
+                        <span className="material-symbols-outlined text-sm">code</span>
+                        GitHub
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-white/5 shrink-0">
+                <button
+                  onClick={() => setShowPreviewCard(false)}
+                  className="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all"
+                >
+                  Fermer l'aperçu
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.getElementById('app-modal-container') || document.body
+        )}
+
         {/* About Me */}
         <div className="mb-6">
           <h3 className="text-transparent bg-gradient-to-r from-pink-400 to-violet-400 bg-clip-text text-xs font-bold uppercase tracking-wider mb-3">
@@ -737,27 +1190,46 @@ const ProfileScreen: React.FC = () => {
           </h3>
           <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-400/20 rounded-2xl p-4">
             <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
-              {userData.preferences || 'Pas de description'}
+              {userData.about || 'Pas de description'}
             </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        {/* Stats Grid - 3 items */}
+        <div className="grid grid-cols-3 gap-2 mb-6">
           {[
             { icon: 'calendar_today', label: 'Disponibilité', value: userData.availability || 'Non renseigné', gradient: 'from-emerald-500/20 to-cyan-500/20', border: 'border-emerald-400/30', iconColor: 'text-emerald-400' },
             { icon: 'hourglass_top', label: 'Durée', value: userData.duration || 'Non renseigné', gradient: 'from-orange-500/20 to-amber-500/20', border: 'border-orange-400/30', iconColor: 'text-orange-400' },
             { icon: 'location_on', label: 'Localisation', value: userData.location || 'Non renseigné', gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-400/30', iconColor: 'text-pink-400' },
-            { icon: 'translate', label: 'Langues', value: userData.languages || 'Non renseigné', gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-400/30', iconColor: 'text-violet-400' },
           ].map((item, i) => (
             <div key={i} className={`bg-gradient-to-br ${item.gradient} rounded-xl p-3 border ${item.border} flex flex-col gap-1`}>
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-                <span className={`material-symbols-outlined text-sm ${item.iconColor}`}>{item.icon}</span>
+              <div className="flex items-center gap-1 text-slate-400 text-[10px] font-medium mb-1">
+                <span className={`material-symbols-outlined text-xs ${item.iconColor}`}>{item.icon}</span>
                 {item.label}
               </div>
-              <span className="text-slate-100 text-sm font-semibold break-words">{item.value}</span>
+              <span className="text-slate-100 text-xs font-semibold break-words line-clamp-2">{item.value}</span>
             </div>
           ))}
+        </div>
+
+        {/* Languages Section - Better Display */}
+        <div className="mb-6">
+          <h3 className="text-transparent bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-xs font-bold uppercase tracking-wider mb-3">
+            Langues
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {Array.isArray(userData.languages) && userData.languages.length > 0 ? (
+              userData.languages.map((lang: any, i: number) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-400/20">
+                  <span className="material-symbols-outlined text-sm text-violet-400">translate</span>
+                  <span className="text-slate-200 text-sm font-semibold">{lang.language}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-medium">{lang.level}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-500 text-sm">Aucune langue renseignée</p>
+            )}
+          </div>
         </div>
 
         {/* Skills */}
@@ -778,25 +1250,92 @@ const ProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Experience & Education */}
+        {/* Experience & Education - Collapsible */}
         <div className="flex flex-col gap-3 mb-6">
+          {/* Experience */}
           <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-400/20 p-4 rounded-xl">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg text-amber-400">work</span>
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedExperience(!expandedExperience)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg text-amber-400">work</span>
+                </div>
+                <div>
+                  <h3 className="text-amber-300 font-bold text-sm">Expérience</h3>
+                  <p className="text-slate-500 text-xs">
+                    {Array.isArray(userData.experience) ? `${userData.experience.length} expérience(s)` : 'Aucune'}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-amber-300 font-bold text-sm">Expérience</h3>
+              <span className={`material-symbols-outlined text-amber-400 transition-transform ${expandedExperience ? 'rotate-180' : ''}`}>
+                expand_more
+              </span>
             </div>
-            <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap break-words">{userData.experience || "Aucune expérience renseignée"}</p>
+            {expandedExperience && (
+              <div className="mt-4">
+                {Array.isArray(userData.experience) && userData.experience.length > 0 ? (
+                  <div className="space-y-3">
+                    {userData.experience.map((exp: any, i: number) => (
+                      <div key={i} className="bg-black/20 rounded-lg p-3 border border-white/5">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="text-amber-200 font-bold text-xs">{exp.position}</h4>
+                          <span className="text-[10px] text-amber-400/70 bg-amber-400/10 px-2 py-0.5 rounded-full">{exp.duration}</span>
+                        </div>
+                        <p className="text-slate-400 text-[11px] font-semibold mb-1">{exp.company}</p>
+                        <p className="text-slate-500 text-[10px]">{exp.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-300 text-xs leading-relaxed">{typeof userData.experience === 'string' ? userData.experience : "Aucune expérience renseignée"}</p>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Education */}
           <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-400/20 p-4 rounded-xl">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg text-blue-400">school</span>
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedEducation(!expandedEducation)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg text-blue-400">school</span>
+                </div>
+                <div>
+                  <h3 className="text-blue-300 font-bold text-sm">Éducation</h3>
+                  <p className="text-slate-500 text-xs">
+                    {Array.isArray(userData.education) ? `${userData.education.length} formation(s)` : 'Aucune'}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-blue-300 font-bold text-sm">Éducation</h3>
+              <span className={`material-symbols-outlined text-blue-400 transition-transform ${expandedEducation ? 'rotate-180' : ''}`}>
+                expand_more
+              </span>
             </div>
-            <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap break-words">{userData.education || "Aucune formation renseignée"}</p>
+            {expandedEducation && (
+              <div className="mt-4">
+                {Array.isArray(userData.education) && userData.education.length > 0 ? (
+                  <div className="space-y-3">
+                    {userData.education.map((edu: any, i: number) => (
+                      <div key={i} className="bg-black/20 rounded-lg p-3 border border-white/5">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="text-blue-200 font-bold text-xs">{edu.degree}</h4>
+                          <span className="text-[10px] text-blue-400/70 bg-blue-400/10 px-2 py-0.5 rounded-full">{edu.year}</span>
+                        </div>
+                        <p className="text-slate-400 text-[11px] font-semibold mb-1">{edu.school}</p>
+                        <p className="text-slate-500 text-[10px]">{edu.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-300 text-xs leading-relaxed">{typeof userData.education === 'string' ? userData.education : "Aucune formation renseignée"}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -809,7 +1348,17 @@ const ProfileScreen: React.FC = () => {
               </div>
               <h3 className="text-rose-300 font-bold text-sm">Loisirs</h3>
             </div>
-            <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap break-words">{userData.hobbies || "Président du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc."}</p>
+            {Array.isArray(userData.hobbies) && userData.hobbies.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {userData.hobbies.map((hobby: string, i: number) => (
+                  <span key={i} className="px-2 py-1 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px]">
+                    {hobby}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap break-words">{typeof userData.hobbies === 'string' ? userData.hobbies : "Aucun loisir renseigné"}</p>
+            )}
           </div>
         </div>
       </div>

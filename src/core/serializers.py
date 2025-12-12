@@ -24,7 +24,7 @@ class StudentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Student
-        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'hobbies', 'theme', 'cv', 'cv_url', 'cv_name', 'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'photo', 'photo_url', 'photo_visible', 'skills', 'created_at']
+        fields = ['id', 'user', 'school', 'school_url', 'program', 'year', 'role', 'availability', 'duration', 'about', 'education', 'experience', 'hobbies', 'theme', 'cv', 'cv_url', 'cv_name', 'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'photo', 'photo_url', 'photo_visible', 'skills', 'created_at']
     
     def get_cv_url(self, obj):
         """Retourne l'URL absolue du CV si présent"""

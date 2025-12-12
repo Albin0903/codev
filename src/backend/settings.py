@@ -4,7 +4,7 @@ Adapted for Docker + PostgreSQL environment.
 """
 
 from pathlib import Path
-import os  # <--- AJOUT INDISPENSABLE
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,7 +15,6 @@ SECRET_KEY = 'django-insecure-1_+xu0ceiqc6ma%6)r+#t7j_7v=ike$jlqym_1@uyhu9a&kj1t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# <--- MODIFICATION : On autorise tout le monde pour le dev Docker
 ALLOWED_HOSTS = ["*"]
 
 
@@ -68,7 +67,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 
 # Database
-# <--- MODIFICATION CRITIQUE : Configuration PostgreSQL via Docker
+# Configuration PostgreSQL via Docker
 
 DATABASES = {
     'default': {
