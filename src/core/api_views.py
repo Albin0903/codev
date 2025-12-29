@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from datetime import timedelta
+from .models import Student, Company, Swipe, Match, Interview
+from .services import plan_student_interviews
 import random
 
 from .models import Student, Company, Swipe, CompanySwipe, Match, Interview
@@ -513,4 +515,17 @@ def reset_database(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+def finalize_priorities_and_plan(request):
+    ordered_ids = request.data.get('ordered_ids', [])
+    student = request.user.student
+    
+    for rank, match_id in enumerate(ordered_ids, start=1):
+        Match.objects.filter(id=match_id, student=student).update(student_priority=rank)
+    
+    plan_student_interviews(student)
+    
+    return Response({"message": "Planning généré avec succès au milieu de journée !"})
 

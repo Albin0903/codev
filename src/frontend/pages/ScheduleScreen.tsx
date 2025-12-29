@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface Event {
   id: number;
@@ -18,14 +19,16 @@ const ScheduleScreen: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [pendingAppointments, setPendingAppointments] = useState(0);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         // Fetch Interviews
         const interviewsResponse = await api.getInterviews();
         const interviewsData = interviewsResponse.results || interviewsResponse;
-        
+
         if (Array.isArray(interviewsData)) {
           const formattedEvents = interviewsData.map((interview: any) => ({
             id: interview.id,
@@ -67,7 +70,7 @@ const ScheduleScreen: React.FC = () => {
 
   // Affichage normal avec la structure complète - même si vide
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden">
+    <div className="relative flex min-h-screen w-full flex-col overflow-hidden">
       <div className="bg-gradient-blur"></div>
       
       <main className="flex-grow overflow-y-auto px-4 pb-32 pt-8">
@@ -90,6 +93,13 @@ const ScheduleScreen: React.FC = () => {
             <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Entretiens programmés</span>
           </div>
         </div>
+        <button style={{ marginTop: '2em', marginBottom: '1em' }}
+            onClick={() => navigate('/priorities')}
+            className="flex items-center justify-center gap-2 w-full py-3 bg-[#1E293B]/60 backdrop-blur-xl border border-primary/30 rounded-2xl text-primary font-bold text-sm hover:bg-primary/10 transition-all active:scale-95 shadow-lg"
+          >
+            <span className="material-symbols-outlined text-xl">sort</span>
+            Modifier l'ordre de mes entretiens
+          </button>
 
         {loading ? (
           <div className="mt-8 text-center text-slate-500">Chargement...</div>
