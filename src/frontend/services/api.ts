@@ -197,6 +197,7 @@ export const api = {
     const token = getToken();
     const headers: Record<string,string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Token ${token}`;
+    console.log('PATCH payload:', JSON.stringify(payload, null, 2));
     const response = await fetch(`${API_BASE_URL}/me/`, {
       method: 'PATCH',
       credentials: token ? 'omit' : 'include',
@@ -210,7 +211,8 @@ export const api = {
         return null;
       }
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.detail || 'Failed to update user');
+      console.error('PATCH error response:', err);
+      throw new Error(err.detail || JSON.stringify(err) || 'Failed to update user');
     }
     return response.json();
   },
@@ -246,6 +248,28 @@ export const api = {
       }),
     });
     if (!response.ok) throw new Error('Failed to create swipe');
+    return response.json();
+  },
+
+  async finalizePlan(orderedIds: number[]) {
+    const token = getToken(); // Utilise votre fonction utilitaire existante
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const response = await fetch(`${API_BASE_URL}/me/finalize-plan/`, {
+      method: 'POST',
+      headers: {
+        ...headers,
+      },
+      // Respecte la logique de credentials de votre projet
+      credentials: token ? 'omit' : 'include',
+      body: JSON.stringify({
+        ordered_ids: orderedIds,
+      }),
+    });
+    
+    if (!response.ok) throw new Error('Failed to finalize planning');
     return response.json();
   },
 

@@ -48,17 +48,17 @@ const MatchScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-6 relative z-50 overflow-hidden">
+    <div className="min-h-screen h-full w-full flex flex-col items-center justify-center p-6 relative z-50 overflow-hidden">
       {/* Blurred background blob specifically for this screen */}
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-500/30 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/30 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-[#1E293B]/60 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-300 ring-1 ring-white/5">
+      <div className="w-full max-w-2xl bg-[#1E293B]/60 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-300 ring-1 ring-white/5">
         
         {/* Avatars Intersection */}
-        <div className="relative h-32 w-48 flex items-center justify-center mb-8">
+        <div className="relative h-40 w-72 flex items-center justify-center mb-8">
           {/* Avatar gauche - Profil actuel */}
-          <div className="absolute left-4 w-24 h-24 rounded-full border-4 border-[#1E293B] z-10 shadow-xl overflow-hidden bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
+          <div className="absolute left-6 w-32 h-32 rounded-full border-4 border-[#1E293B] z-10 shadow-xl overflow-hidden bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
             {isCompany ? (
               // Entreprise voit l'étudiant à gauche
               matchData.studentPhoto ? (
@@ -77,7 +77,7 @@ const MatchScreen: React.FC = () => {
           </div>
           
           {/* Avatar droite - L'autre partie */}
-          <div className="absolute right-4 w-24 h-24 rounded-full border-4 border-[#1E293B] z-20 bg-white flex items-center justify-center shadow-xl overflow-hidden">
+          <div className="absolute right-6 w-32 h-32 rounded-full border-4 border-[#1E293B] z-20 bg-white flex items-center justify-center shadow-xl overflow-hidden">
             {matchData.companyLogo ? (
               <img 
                 src={matchData.companyLogo} 

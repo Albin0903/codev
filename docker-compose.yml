@@ -26,6 +26,7 @@ services:
       - DB_PASSWORD=password_secret
       - DB_HOST=db  # Le nom du service ci-dessus
       - DB_PORT=5432
+      - GOOGLE_AI_API_KEY=AIzaSyCqK4z7IWsHQACwVvjdlIb1mnMlvfUG3pw
 
 volumes:
   postgres_data: # Pour ne pas perdre les données quand on éteint Docker

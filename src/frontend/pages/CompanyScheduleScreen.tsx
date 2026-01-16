@@ -28,8 +28,8 @@ const CompanyScheduleScreen: React.FC = () => {
           const formattedInterviews = interviewsData.map((interview: any) => ({
             id: interview.id,
             time: new Date(interview.time_slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-            title: `Entretien avec ${interview.match.student.first_name} ${interview.match.student.last_name}`,
-            studentName: `${interview.match.student.first_name} ${interview.match.student.last_name}`,
+            title: `Entretien avec ${interview.match.student.user.first_name} ${interview.match.student.user.last_name}`,
+            studentName: `${interview.match.student.user.first_name} ${interview.match.student.user.last_name}`,
             studentProgram: interview.match.student.program || 'Étudiant',
             location: interview.room || 'Stand A01',
             status: interview.status as 'confirmed' | 'pending' | 'scheduled',
@@ -58,7 +58,6 @@ const CompanyScheduleScreen: React.FC = () => {
   const nextInterview = interviews[0];
   const otherInterviews = interviews.slice(1);
   const hasInterviews = interviews.length > 0;
-
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       <div className="bg-gradient-blur"></div>
