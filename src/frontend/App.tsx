@@ -11,6 +11,7 @@ import ProfileScreen from './pages/ProfileScreen';
 import RegisterScreen from './pages/RegisterScreen';
 import ScheduleScreen from './pages/ScheduleScreen';
 import SwipeScreen from './pages/SwipeScreen';
+import PriorityScreen from './pages/PriorityScreen';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -33,14 +34,14 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#edf2f8' }}>
       <div
-        className="relative flex flex-col h-[96vh] max-h-[900px] w-full max-w-[450px] overflow-hidden font-display shadow-2xl rounded-[40px] border-[8px]"
+        className="min-h-screen w-full flex flex-col relative  max-h-[900px] overflow-hidden font-display shadow-2xl"
         style={{
           backgroundColor: 'var(--bg-primary)',
           borderColor: 'var(--border-color)',
         }}
       >
       {/* iPhone Notch / Dynamic Island */}
-      <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
+      {/* <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgb(16,23,34), transparent)' }}></div>
             <div className="absolute top-0 left-0 right-0 flex justify-center pt-2">
               <div className="w-32 h-8 rounded-full flex items-center justify-end px-3 gap-2" style={{ backgroundColor: 'rgb(20,30,48)' }}>
@@ -48,15 +49,17 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }}></div>
               </div>
             </div>
-      </div>
+      </div> */}
 
       <BackgroundBlobs />
       
       <main
-        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12"
+        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12 flex flex-col"
         style={{ background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 40%)' }}
       >
-        {children}
+        <div className="flex-1 w-full">
+          {children}
+        </div>
       </main>
 
       {/* Portal Target for Modals */}
@@ -69,7 +72,7 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
               style={{ background: 'linear-gradient(to top, var(--bg-primary), transparent)' }}
             />
             
-            <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
+            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
                 <div className="pointer-events-auto">
                     <BottomNavigation />
                 </div>
@@ -153,6 +156,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <CompanyScheduleScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/priorities"
+            element={
+              <ProtectedRoute>
+                <PriorityScreen />
               </ProtectedRoute>
             }
           />
