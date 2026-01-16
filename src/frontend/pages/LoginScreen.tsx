@@ -92,7 +92,7 @@ const LoginScreen: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => alert('Fonctionnalité à venir')}
+                onClick={() => navigate('/register')} // <--- LE CHANGEMENT EST ICI
                 className="flex-1 py-2 px-4 border border-slate-700 rounded-lg text-slate-300 hover:bg-slate-800/50 transition-colors text-sm font-medium"
               >
                 S'inscrire
