@@ -13,6 +13,8 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Student, Company, Swipe, Match, Interview
 from .services import plan_student_interviews
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
 import random
 
 from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill
