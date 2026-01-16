@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { BottomNavigation } from './components/BottomNavigation';
+import React, { useEffect } from 'react';
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { BackgroundBlobs } from './components/BackgroundBlobs';
-import SwipeScreen from './pages/SwipeScreen';
-import ProfileScreen from './pages/ProfileScreen';
+import { BottomNavigation } from './components/BottomNavigation';
 import CompanyProfileScreen from './pages/CompanyProfileScreen';
-import CompanySwipeScreen from './pages/CompanySwipeScreen';
 import CompanyScheduleScreen from './pages/CompanyScheduleScreen';
-import ScheduleScreen from './pages/ScheduleScreen';
-import MatchScreen from './pages/MatchScreen';
+import CompanySwipeScreen from './pages/CompanySwipeScreen';
 import LoginScreen from './pages/LoginScreen';
+import MatchScreen from './pages/MatchScreen';
+import ProfileScreen from './pages/ProfileScreen';
+import RegisterScreen from './pages/RegisterScreen';
+import ScheduleScreen from './pages/ScheduleScreen';
+import SwipeScreen from './pages/SwipeScreen';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = sessionStorage.getItem('jobfair_token');
   
   if (!token) {
-    // Redirection immédiate vers le login si pas de token
     return <Navigate to="/login" replace />;
   }
 
@@ -25,8 +25,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  // Masquer la barre de navigation sur certains écrans
-  const hideNav = ['/match', '/login'].includes(location.pathname);
+  
+  // 2. AJOUT DE '/register' ICI POUR CACHER LE MENU
+  const hideNav = ['/match', '/login', '/register'].includes(location.pathname);
   const showNav = !hideNav;
 
   return (
@@ -58,12 +59,11 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
         {children}
       </main>
 
-      {/* Portal Target for Modals (keeps them inside the phone frame) */}
+      {/* Portal Target for Modals */}
       <div id="app-modal-container" className="absolute inset-0 z-[60] pointer-events-none"></div>
 
       {showNav && (
         <div className="bottom-nav-wrapper">
-            {/* Gradient Blur Mask for Bottom Nav */}
             <div
               className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-40"
               style={{ background: 'linear-gradient(to top, var(--bg-primary), transparent)' }}
@@ -82,7 +82,6 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const App: React.FC = () => {
-  // Initialize theme from localStorage or default to dark
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'dark';
     document.documentElement.classList.remove('light', 'dark');
@@ -93,10 +92,11 @@ const App: React.FC = () => {
     <HashRouter>
       <Layout>
         <Routes>
-          {/* Route publique */}
+          {/* Routes publiques */}
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/register" element={<RegisterScreen />} /> {/* Route publique ajoutée proprement */}
 
-          {/* Redirection de la racine vers /profile (qui est protégé) */}
+          {/* Redirection racine */}
           <Route path="/" element={<Navigate to="/profile" replace />} />
 
           {/* Routes protégées */}

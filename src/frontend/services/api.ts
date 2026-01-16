@@ -1,9 +1,7 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:8000/api';
 
-// Token storage (using sessionStorage for multi-tab support with different accounts)
-// Each browser tab has its own session, so you can be logged in as student in one tab
-// and as company in another tab
+// Token storage
 const TOKEN_KEY = 'jobfair_token';
 const USER_TYPE_KEY = 'jobfair_user_type';
 
@@ -33,6 +31,44 @@ function clearAuth() {
 
 // API Service
 export const api = {
+  // --- NOUVELLE MÉTHODE AJOUTÉE ICI (DANS L'OBJET) ---
+  async register(userData: { username: string, email: string, password: string, userType: 'student' | 'company' }) {
+    const payload = {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      user_type: userData.userType 
+    };
+
+    const response = await fetch(`${API_BASE_URL}/register/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'omit', 
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      let errorMsg = 'Erreur lors de l\'inscription.';
+
+      if (error.username) {
+        errorMsg = `Nom d'utilisateur : ${error.username[0]}`;
+      } else if (error.email) {
+        errorMsg = `Email : ${error.email[0]}`;
+      } else if (error.non_field_errors) {
+        errorMsg = error.non_field_errors[0];
+      } else if (error.detail) {
+        errorMsg = error.detail;
+      }
+      
+      throw new Error(errorMsg);
+    }
+    
+    return response.json();
+  },
+
   // Login
   async login(username: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/login/`, {
@@ -65,7 +101,7 @@ export const api = {
       headers,
     });
     
-    clearAuth(); // Supprimer le token et user_type du localStorage
+    clearAuth();
     
     if (!response.ok) throw new Error('Logout failed');
     return response.json();
@@ -82,10 +118,9 @@ export const api = {
     });
     
     if (!response.ok) {
-      // Si le token est invalide (401 ou 403), on le supprime et on recharge la page
       if (response.status === 401 || response.status === 403) {
         clearAuth();
-        window.location.reload(); // Cela déclenchera la redirection vers /login via ProtectedRoute
+        window.location.reload();
         return null;
       }
       throw new Error('Failed to fetch user');
@@ -154,7 +189,6 @@ export const api = {
       throw new Error('Failed to fetch offers');
     }
     const data = await response.json();
-    // DRF ViewSet returns paginated results by default
     return Array.isArray(data) ? data : (data.results || []);
   },
 
@@ -267,7 +301,7 @@ export const api = {
     return response.json();
   },
 
-  // Upload CV (fichier PDF ou Word)
+  // Upload CV
   async uploadCV(file: File) {
     const token = getToken();
     const headers: Record<string,string> = {};
