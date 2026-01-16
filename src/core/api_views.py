@@ -56,6 +56,47 @@ def create_interview_for_match(match):
     
     return interview
 
+class RegisterView(APIView):
+    permission_classes = [AllowAny] # Important : permet l'accès sans être connecté
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            # 1. Création de l'User Django standard
+            user = User.objects.create_user(
+                username=serializer.validated_data['username'],
+                email=serializer.validated_data['email'],
+                password=serializer.validated_data['password']
+            )
+            
+            user_type = serializer.validated_data['user_type']
+
+            # 2. Création du profil associé (Student ou Company)
+            if user_type == 'student':
+                Student.objects.create(
+                    user=user,
+                    program="Formation à définir",
+                    year="Année à définir",
+                    school="Polytech Lyon"
+                )
+            elif user_type == 'company':
+                Company.objects.create(
+                    user=user,
+                    name=user.username,
+                    sector="Secteur à définir",
+                    contact_email=user.email,
+                    contact_name="À définir"
+                )
+
+            return Response({
+                "message": "Compte créé avec succès",
+                "user": UserSerializer(user).data,
+                "user_type": user_type
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     """
