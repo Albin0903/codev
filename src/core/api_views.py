@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
 import random
 
 from .models import Student, Company, Swipe, CompanySwipe, Match, Interview
