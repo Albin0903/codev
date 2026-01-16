@@ -13,7 +13,7 @@ from .models import Student, Company, Swipe, Match, Interview
 from .services import plan_student_interviews
 import random
 
-from .models import Student, Company, Swipe, CompanySwipe, Match, Interview
+from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill
 from .serializers import (
     StudentSerializer, CompanySerializer, SwipeSerializer, 
     MatchSerializer, InterviewSerializer
@@ -262,22 +262,56 @@ def current_user(request):
     # PATCH
     # Allow updating some user fields (first_name, last_name, email) alongside Student
     data = request.data.copy() if isinstance(request.data, dict) else dict(request.data)
+    
+    # Extraire d'abord les champs utilisateur AVANT le filtrage
     user_updated = False
     user = request.user
     for key in ('first_name', 'last_name', 'email'):
         if key in data:
             try:
-                setattr(user, key, data.pop(key))
-                user_updated = True
+                val = data.pop(key)
+                if val is not None and (not isinstance(val, str) or val.strip() != ""):
+                    setattr(user, key, val)
+                    user_updated = True
             except Exception:
                 pass
     if user_updated:
         user.save()
 
+    # Filtrer pour ne garder que les champs autorisés du modèle Student
+    allowed_student_fields = {
+        'school', 'school_url', 'program', 'year', 'role',
+        'availability', 'duration', 'education', 'experience', 'hobbies', 'theme',
+        'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone',
+        'photo_visible', 'about'
+    }
+    
+    # Champs URL qui doivent être null si vides
+    url_fields = {'school_url', 'linkedin_url', 'github_url', 'website_url'}
+    
+    # Retirer toute clé inconnue (hors 'skills' géré séparément)
+    filtered_data = {}
+    for k, v in list(data.items()):
+        if k in allowed_student_fields:
+            # Convertir les URLs vides en None
+            if k in url_fields:
+                if v is None or (isinstance(v, str) and v.strip() == ""):
+                    filtered_data[k] = None
+                    continue
+            # Ne pas écraser avec des valeurs vides ou nulles (sauf pour les listes/arrays et les URLs)
+            if v is None:
+                continue
+            if isinstance(v, str) and v.strip() == "" and k not in url_fields:
+                continue
+            filtered_data[k] = v
+    data = filtered_data
+
     # handle skills specially if provided (accept array of names or ids)
     skills_payload = None
-    if 'skills' in data:
-        skills_payload = data.pop('skills')
+    # skills peut arriver dans request.data mais n'est pas champ du serializer
+    if 'skills' in request.data:
+        skills_payload = request.data.get('skills')
+        print(f"[API /me PATCH] Skills reçus: {skills_payload} (type: {type(skills_payload)})")
 
     serializer = StudentSerializer(student, data=data, partial=True)
     if serializer.is_valid():
@@ -289,7 +323,7 @@ def current_user(request):
                 # accept comma-separated string, array of strings, or array of ids
                 names = []
                 if isinstance(skills_payload, str):
-                    names = [s.trim() for s in skills_payload.split(',') if s.strip()]
+                    names = [s.strip() for s in skills_payload.split(',') if s.strip()]
                 elif isinstance(skills_payload, list):
                     # determine if list of ints (ids) or strings (names)
                     if len(skills_payload) > 0 and isinstance(skills_payload[0], int):
@@ -301,6 +335,7 @@ def current_user(request):
                             except Exception:
                                 continue
                         inst.skills.set(skills_objs)
+                        print(f"[API /me PATCH] Skills mis à jour (par IDs): {[s.name for s in skills_objs]}")
                     else:
                         # list of names
                         names = [str(s).strip() for s in skills_payload if str(s).strip()]
@@ -310,11 +345,14 @@ def current_user(request):
                         sk, _ = Skill.objects.get_or_create(name=nm)
                         skills_objs.append(sk)
                     inst.skills.set(skills_objs)
-            except Exception:
-                pass
+                    print(f"[API /me PATCH] Skills mis à jour (par noms): {[s.name for s in skills_objs]}")
+            except Exception as e:
+                print(f"[API /me PATCH] Erreur skills: {e}")
 
         # re-serialize to include fresh related user and skills data
         return Response(StudentSerializer(inst, context={'request': request}).data)
+    print(f"[API /me PATCH] Erreurs serializer: {serializer.errors}")
+    print(f"[API /me PATCH] Data reçue: {data}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -361,7 +399,7 @@ def login_view(request):
                 defaults={
                     'program': 'Non spécifié',
                     'year': 'N/A',
-                    'preferences': 'Profil généré automatiquement'
+                    'about': 'Profil généré automatiquement'
                 }
             )
             from .serializers import StudentSerializer
@@ -441,17 +479,22 @@ def upload_cv(request):
     try:
         from .cv_parser import parse_cv
         extracted_data = parse_cv(cv_file, cv_file.content_type)
+        # Afficher la réponse brute de Gemini dans la console
+        print("[CV Parser] Réponse Gemini:", extracted_data)
         cv_file.seek(0)  # Reset file pointer après parsing
     except Exception as e:
         print(f"Erreur parsing CV: {e}")
         # Continue même si le parsing échoue
     
+    # NOTE: On ne fait plus d'application automatique des données extraites
+    # L'utilisateur devra explicitement cliquer sur "Appliquer les modifications"
+    # dans la modal d'import CV pour mettre à jour son profil
+
     # Supprimer l'ancien CV s'il existe
     if student.cv:
         student.cv.delete(save=False)
     
-    # Sauvegarder le nouveau CV (sans appliquer automatiquement les données extraites)
-    # L'utilisateur choisira s'il veut appliquer les données via la modal d'import
+    # Sauvegarder le nouveau CV
     student.cv = cv_file
     student.save()
     
@@ -546,10 +589,33 @@ def reset_database(request):
         }, status=status.HTTP_403_FORBIDDEN)
     
     try:
+        # Réinitialiser complètement la base (tables)
         call_command('reset_db', '--force')
+        # Recréer le schéma
+        call_command('migrate')
+
+        # Vider toutes les données (sécurité supplémentaire)
+        call_command('flush', '--noinput')
+
+        # Nettoyer les fichiers médias uploadés (CV, photos, logos)
+        import os
+        import shutil
+        from django.conf import settings
+        media_root = getattr(settings, 'MEDIA_ROOT', None)
+        if media_root and os.path.isdir(media_root):
+            for sub in ('cvs', 'photos', 'logos'):
+                p = os.path.join(media_root, sub)
+                try:
+                    if os.path.isdir(p):
+                        shutil.rmtree(p)
+                except Exception:
+                    pass
+
+        # Ré-initialiser les données de démo
+        call_command('setup_demo')
         return Response({
             'success': True,
-            'message': 'Base de données réinitialisée avec succès'
+            'message': 'Base et médias entièrement vidés. Démo réinstallée.'
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({

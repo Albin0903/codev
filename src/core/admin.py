@@ -20,7 +20,7 @@ class StudentForm(forms.ModelForm):
 
     class Meta:
         model = Student
-        fields = ['user', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'availability', 'duration', 'education', 'experience', 'cv', 'skills']
+        fields = ['user', 'school', 'school_url', 'program', 'year', 'role', 'about', 'availability', 'duration', 'education', 'experience', 'cv', 'skills']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,15 +75,15 @@ class StudentForm(forms.ModelForm):
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     form = StudentForm
-    list_display = ['avatar_tag', 'user_link', 'program', 'year', 'school', 'gender', 'created_at']
-    list_filter = ['program', 'year', 'gender']
+    list_display = ['avatar_tag', 'user_link', 'program', 'year', 'school', 'role', 'created_at']
+    list_filter = ['program', 'year', 'role']
     search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'school']
     raw_id_fields = ('user',)
     readonly_fields = ('created_at','updated_at')
 
     fieldsets = (
         (None, {
-            'fields': ('user', 'first_name', 'last_name', 'email', 'school', 'school_url', 'program', 'year', 'gender', 'preferences', 'cv')
+            'fields': ('user', 'first_name', 'last_name', 'email', 'school', 'school_url', 'program', 'year', 'role', 'about', 'cv')
         }),
         ('Timestamps', {
             'fields': ('created_at','updated_at'),
@@ -211,13 +211,29 @@ class CustomAdminSite(admin.AdminSite):
         from django.contrib import messages
         if request.method == 'POST':
             try:
-                # Appeler la commande reset_db avec --force
+                # Réinitialisation complète: reset_db -> migrate -> flush -> nettoyer médias -> setup_demo
                 output = StringIO()
                 call_command('reset_db', '--force', stdout=output)
-                result = output.getvalue()
+                call_command('migrate', stdout=output)
+                call_command('flush', '--noinput', stdout=output)
+
+                # Nettoyage médias
+                import os, shutil
+                from django.conf import settings
+                media_root = getattr(settings, 'MEDIA_ROOT', None)
+                if media_root and os.path.isdir(media_root):
+                    for sub in ('cvs', 'photos', 'logos'):
+                        p = os.path.join(media_root, sub)
+                        try:
+                            if os.path.isdir(p):
+                                shutil.rmtree(p)
+                        except Exception:
+                            pass
+
+                # Setup démo
+                call_command('setup_demo', stdout=output)
                 
-                # Rediriger vers l'admin avec un message de succès
-                messages.success(request, '✅ Base de données réinitialisée avec succès !')
+                messages.success(request, '✅ Base et médias entièrement vidés. Démo réinstallée.')
                 return HttpResponseRedirect('/admin/')
             except Exception as e:
                 messages.error(request, f'❌ Erreur: {str(e)}')

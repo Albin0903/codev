@@ -50,21 +50,27 @@ class Command(BaseCommand):
                 'school_url': 'https://www.polytech-lyon.fr',
                 'program': 'Master Informatique - Spécialité Web',
                 'year': 'M1',
-                'gender': 'F',
-                'preferences': 'Passionnée par le développement web et mobile, je recherche une alternance pour mettre en pratique mes compétences en React, TypeScript et Django. Motivée et créative, j\'aime travailler en équipe sur des projets innovants.',
+                'role': 'etudiant',
                 'availability': 'Septembre 2024',
                 'duration': '12 mois',
-                'education': 'Master 1 Informatique - Spécialité Web à Polytech Lyon. Formation complète en développement full-stack, architecture logicielle et gestion de projet agile.',
-                'experience': 'Stage de 3 mois en tant que développeuse React chez TechCorp (2023). Développement d\'une application de gestion interne utilisée par 200+ employés.',
-                'hobbies': 'Présidente du BDE, participation à 3 Hackathons (1er prix 2023), Photographie urbaine, Escalade de bloc.',
-                'linkedin_url': 'https://linkedin.com/in/marie-dupont',
-                'github_url': 'https://github.com/marie-dupont',
-                'website_url': 'https://marie-dupont.dev',
+                'about': "Étudiante en Master 1 Informatique à Polytech Lyon, je suis passionnée par le développement web fullstack. J'ai une première expérience en React et je souhaite approfondir mes connaissances en architecture logicielle.",
+                'education': [
+                    {"school": "Université Lyon 1", "degree": "Licence Informatique", "year": "2020-2023", "description": "Mention Bien"},
+                    {"school": "Polytech Lyon", "degree": "Master 1 Informatique", "year": "2024-2025", "description": "Spécialité Web et IA"}
+                ],
+                'experience': [
+                    {"company": "TechCorp", "position": "Développeuse React", "duration": "Stage, 2023", "description": "Développement d'une application de gestion interne."},
+                    {"company": "WebStudio", "position": "Assistante Frontend", "duration": "2022", "description": "Intégration UI et tests."}
+                ],
+                'hobbies': ["Présidente du BDE", "Hackathons (1er prix 2023)", "Photographie urbaine", "Escalade de bloc"],
+                'linkedin_url': '',
+                'github_url': '',
+                'website_url': '',
                 'location': 'Lyon, France',
-                'languages': 'Français, Anglais, Espagnol',
+                'languages': [{"language": "Français", "level": "Langue maternelle"}, {"language": "Anglais", "level": "C1"}, {"language": "Espagnol", "level": "B2"}],
                 'phone': '+33 6 12 34 56 78',
                 'photo_visible': True,
-                'skills': ['React', 'TypeScript', 'Python', 'Django', 'Git', 'Tailwind CSS'],
+                'skills': ['React', 'TypeScript', 'Python', 'Django', 'Git'],
             },
             {
                 'username': 'lucas.martin',
@@ -76,21 +82,27 @@ class Command(BaseCommand):
                 'school_url': 'https://www.insa-lyon.fr',
                 'program': 'Génie Informatique',
                 'year': 'M2',
-                'gender': 'M',
-                'preferences': 'Développeur backend passionné, je recherche un stage de fin d\'études pour perfectionner mes compétences en architecture distribuée et DevOps.',
+                'role': 'alternant',
                 'availability': 'Février 2025',
                 'duration': '6 mois',
-                'education': 'Master 2 Génie Informatique à l\'INSA Lyon. Spécialisation en systèmes distribués et cloud computing.',
-                'experience': 'Alternance de 2 ans chez Sopra Steria en tant que développeur Java/Spring. Développement de microservices pour le secteur bancaire.',
-                'hobbies': 'Contributeur open source, jeux vidéo compétitifs, course à pied.',
-                'linkedin_url': 'https://linkedin.com/in/lucas-martin-dev',
-                'github_url': 'https://github.com/lucas-martin',
+                'about': "Futur ingénieur INSA Lyon, spécialisé en backend et cloud computing. Je cherche un stage de fin d'études challengeant.",
+                'education': [
+                    {"school": "INSA Lyon", "degree": "Licence Informatique", "year": "2019-2022", "description": ""},
+                    {"school": "INSA Lyon", "degree": "Master 2 Génie Informatique", "year": "2024-2025", "description": ""}
+                ],
+                'experience': [
+                    {"company": "Sopra Steria", "position": "Développeur Java/Spring", "duration": "Alternance, 2023-2025", "description": "Microservices bancaires."},
+                    {"company": "PME locale", "position": "Technicien Systèmes", "duration": "2022", "description": "Support et scripts."}
+                ],
+                'hobbies': ["Contributeur open source", "Jeux vidéo compétitifs", "Course à pied"],
+                'linkedin_url': '',
+                'github_url': '',
                 'website_url': '',
                 'location': 'Villeurbanne, France',
-                'languages': 'Français, Anglais',
+                'languages': [{"language": "Français", "level": "Langue maternelle"}, {"language": "Anglais", "level": "C2"}],
                 'phone': '+33 6 98 76 54 32',
                 'photo_visible': False,
-                'skills': ['Java', 'Python', 'Docker', 'Kubernetes', 'PostgreSQL', 'AWS'],
+                'skills': ['Java', 'Python', 'Docker', 'Kubernetes', 'PostgreSQL'],
             },
             {
                 'username': 'emma.bernard',
@@ -102,21 +114,27 @@ class Command(BaseCommand):
                 'school_url': 'https://www.epitech.eu',
                 'program': 'Tek4 - Expert en Technologies de l\'Information',
                 'year': 'M1',
-                'gender': 'F',
-                'preferences': 'Designer et développeuse frontend, je cherche à combiner mes compétences en UX/UI avec le développement d\'interfaces modernes.',
+                'role': 'apprenti',
                 'availability': 'Avril 2025',
                 'duration': '4-6 mois',
-                'education': 'Epitech Lyon - 4ème année. Expérience internationale (1 an à Séoul). Spécialisation UX/UI et développement frontend.',
-                'experience': 'Stage de 6 mois chez Ubisoft Lyon en tant que UI Developer. Création d\'interfaces pour jeux mobiles.',
-                'hobbies': 'Design graphique, illustration digitale, voyages, photographie.',
-                'linkedin_url': 'https://linkedin.com/in/emma-bernard-ux',
-                'github_url': 'https://github.com/emma-b-design',
-                'website_url': 'https://emma-bernard.design',
+                'about': "Passionnée par l'UX/UI et le frontend, je crée des expériences utilisateurs fluides et esthétiques.",
+                'education': [
+                    {"school": "Epitech", "degree": "Bachelor Informatique", "year": "2019-2022", "description": ""},
+                    {"school": "Epitech Lyon", "degree": "Tek4", "year": "2024-2025", "description": "Parcours UX/UI"}
+                ],
+                'experience': [
+                    {"company": "Ubisoft Lyon", "position": "UI Developer", "duration": "Stage, 2024", "description": "Interfaces pour jeux mobiles."},
+                    {"company": "Freelance", "position": "Frontend Developer", "duration": "2023", "description": "Sites vitrines et dashboards."}
+                ],
+                'hobbies': ["Design graphique", "Illustration digitale", "Voyages", "Photographie"],
+                'linkedin_url': '',
+                'github_url': '',
+                'website_url': '',
                 'location': 'Lyon, France',
-                'languages': 'Français, Anglais, Coréen (notions)',
+                'languages': [{"language": "Français", "level": "Langue maternelle"}, {"language": "Anglais", "level": "B2"}, {"language": "Coréen", "level": "Notions"}],
                 'phone': '+33 7 11 22 33 44',
                 'photo_visible': True,
-                'skills': ['React', 'Vue.js', 'TypeScript', 'Figma', 'Tailwind CSS', 'Git'],
+                'skills': ['React', 'Vue.js', 'TypeScript', 'Figma', 'Tailwind CSS'],
             },
         ]
 
@@ -144,13 +162,13 @@ class Command(BaseCommand):
                     'school_url': student_data['school_url'],
                     'program': student_data['program'],
                     'year': student_data['year'],
-                    'gender': student_data['gender'],
-                    'preferences': student_data['preferences'],
+                    'role': student_data['role'],
                     'availability': student_data['availability'],
                     'duration': student_data['duration'],
                     'education': student_data['education'],
                     'experience': student_data['experience'],
                     'hobbies': student_data['hobbies'],
+                    'about': student_data.get('about', ''),
                     'theme': 'dark',
                     'linkedin_url': student_data['linkedin_url'],
                     'github_url': student_data['github_url'],
@@ -164,14 +182,14 @@ class Command(BaseCommand):
             
             if not created:
                 # Mettre à jour tous les champs
-                for field in ['school', 'school_url', 'program', 'year', 'gender', 'preferences', 
-                              'availability', 'duration', 'education', 'experience', 'hobbies',
+                for field in ['school', 'school_url', 'program', 'year', 'role',
+                              'availability', 'duration', 'education', 'experience', 'hobbies', 'about',
                               'linkedin_url', 'github_url', 'website_url', 'location', 'languages', 'phone', 'photo_visible']:
                     setattr(student, field, student_data.get(field, getattr(student, field)))
                 student.save()
             
-            # Ajouter les compétences
-            for skill_name in student_data['skills']:
+            # Ajouter les compétences (max 5)
+            for skill_name in student_data['skills'][:5]:
                 if skill_name in skills:
                     student.skills.add(skills[skill_name])
             
