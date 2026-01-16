@@ -8,6 +8,7 @@ Système de swipe bidirectionnel inspiré de Tinder.
 ## 🚀 Démarrage Rapide
 
 ### Prérequis
+
 - **Docker Desktop** (lancé)
 - **Node.js** v18+
 
@@ -33,11 +34,11 @@ npm install
 
 ### ✅ Accès
 
-| Service | URL | Identifiants |
-|---------|-----|--------------|
-| **App Étudiant** | http://localhost:3000 | `marie.dupont` / `test123` |
-| **App Entreprise** | http://localhost:3000 | `innovatech` / `test123` |
-| **Admin Django** | http://localhost:8000/admin/ | `admin` / `admin` |
+| Service            | URL                          | Identifiants               |
+| ------------------ | ---------------------------- | -------------------------- |
+| **App Étudiant**   | http://localhost:3000        | `marie.dupont` / `test123` |
+| **App Entreprise** | http://localhost:3000        | `innovatech` / `test123`   |
+| **Admin Django**   | http://localhost:8000/admin/ | `admin` / `admin`          |
 
 ---
 
@@ -53,12 +54,12 @@ npm install
 
 ### Stack Technique
 
-| Layer | Technologies |
-|-------|-------------|
+| Layer        | Technologies                             |
+| ------------ | ---------------------------------------- |
 | **Frontend** | React 19, TypeScript, Tailwind CSS, Vite |
-| **Backend** | Django 5.2, Django REST Framework |
-| **Database** | PostgreSQL 15 (Docker) |
-| **Auth** | Token Authentication (sessionStorage) |
+| **Backend**  | Django 5.2, Django REST Framework        |
+| **Database** | PostgreSQL 15 (Docker)                   |
+| **Auth**     | Token Authentication (sessionStorage)    |
 
 ---
 
@@ -122,11 +123,13 @@ codev/
 ## 🧩 Modèles de Données
 
 ### Utilisateurs
+
 - **User** : Authentification Django (username, password)
 - **Student** : Profil étudiant (école, formation, compétences, CV, photo)
 - **Company** : Profil entreprise (secteur, description, logo, offres)
 
 ### Interactions
+
 - **Swipe** : Action étudiant → entreprise (like/pass)
 - **CompanySwipe** : Action entreprise → étudiant (like/pass)
 - **Match** : Créé automatiquement quand les deux ont liké mutuellement
@@ -134,6 +137,7 @@ codev/
 - **InternshipOffer** : Offres de stage d'une entreprise
 
 ### Relations
+
 ```
 Student ←──── Swipe ────→ Company
     ↑                        ↑
@@ -149,55 +153,62 @@ Student ←──── Swipe ────→ Company
 ## 🔌 API Endpoints
 
 ### Authentification
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `POST` | `/api/login/` | Connexion (retourne token) |
-| `POST` | `/api/logout/` | Déconnexion |
+
+| Méthode | Endpoint       | Description                |
+| ------- | -------------- | -------------------------- |
+| `POST`  | `/api/login/`  | Connexion (retourne token) |
+| `POST`  | `/api/logout/` | Déconnexion                |
 
 ### Étudiants
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET/PATCH` | `/api/me/` | Profil étudiant connecté |
-| `POST` | `/api/cv/` | Upload CV (multipart/form-data) |
-| `GET` | `/api/companies/` | Liste des entreprises |
-| `GET` | `/api/companies/next_card/` | Prochaine entreprise à swiper |
-| `POST` | `/api/swipes/` | Swiper sur une entreprise |
-| `GET` | `/api/matches/` | Matchs mutuels |
-| `GET` | `/api/interviews/` | Entretiens planifiés |
+
+| Méthode     | Endpoint                    | Description                     |
+| ----------- | --------------------------- | ------------------------------- |
+| `GET/PATCH` | `/api/me/`                  | Profil étudiant connecté        |
+| `POST`      | `/api/cv/`                  | Upload CV (multipart/form-data) |
+| `GET`       | `/api/companies/`           | Liste des entreprises           |
+| `GET`       | `/api/companies/next_card/` | Prochaine entreprise à swiper   |
+| `POST`      | `/api/swipes/`              | Swiper sur une entreprise       |
+| `GET`       | `/api/matches/`             | Matchs mutuels                  |
+| `GET`       | `/api/interviews/`          | Entretiens planifiés            |
 
 ### Entreprises
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET/PATCH` | `/api/company/me/` | Profil entreprise connectée |
-| `GET` | `/api/company/students/` | Liste des étudiants |
-| `GET` | `/api/company/students/next_card/` | Prochain étudiant à swiper |
-| `POST` | `/api/company/swipes/` | Swiper sur un étudiant |
-| `GET` | `/api/company/matches/` | Matchs mutuels |
-| `GET` | `/api/company/interviews/` | Entretiens planifiés |
-| `GET/POST` | `/api/company/offers/` | Offres de stage |
+
+| Méthode     | Endpoint                           | Description                 |
+| ----------- | ---------------------------------- | --------------------------- |
+| `GET/PATCH` | `/api/company/me/`                 | Profil entreprise connectée |
+| `GET`       | `/api/company/students/`           | Liste des étudiants         |
+| `GET`       | `/api/company/students/next_card/` | Prochain étudiant à swiper  |
+| `POST`      | `/api/company/swipes/`             | Swiper sur un étudiant      |
+| `GET`       | `/api/company/matches/`            | Matchs mutuels              |
+| `GET`       | `/api/company/interviews/`         | Entretiens planifiés        |
+| `GET/POST`  | `/api/company/offers/`             | Offres de stage             |
 
 ---
 
 ## ✅ Fonctionnalités Implémentées
 
 ### 🔐 Authentification
+
 - [x] Page de connexion (étudiants et entreprises)
 - [x] Token authentication (sessionStorage)
 - [x] Détection automatique du type d'utilisateur (Student/Company)
 - [x] Déconnexion
 
 ### 👤 Profil Étudiant
+
 - [x] Affichage des informations personnelles
 - [x] Modification du profil (nom, école, compétences, langues, loisirs)
 - [x] Upload de CV (PDF/Word, max 5MB)
 - [x] Visibilité de la photo configurable
 
 ### 🏢 Profil Entreprise
+
 - [x] Affichage des informations
 - [x] Modification du profil
 - [x] Gestion des offres de stage
 
 ### 🔄 Système de Swipe
+
 - [x] Swipe étudiant → entreprises
 - [x] Swipe entreprise → étudiants
 - [x] Animations de swipe (gauche/droite)
@@ -205,15 +216,18 @@ Student ←──── Swipe ────→ Company
 - [x] État vide élégant quand plus de profils
 
 ### 💝 Matching Bidirectionnel
+
 - [x] Match créé uniquement si les deux parties ont liké
 - [x] Écran de célébration dynamique
 - [x] Liste des matchs (étudiants et entreprises)
 
 ### 📅 Planning
+
 - [x] Affichage des entretiens planifiés
 - [x] Vue agenda pour étudiants et entreprises
 
 ### ⚙️ Administration
+
 - [x] Interface admin Django personnalisée
 - [x] Bouton reset base de données
 - [x] Commande `setup_demo` pour données de test
@@ -225,6 +239,7 @@ Student ←──── Swipe ────→ Company
 ### 🛡️ Architecture de Sécurité
 
 #### 1. Authentification
+
 - **Type** : Token Authentication (Django REST Framework)
 - **Stockage** : sessionStorage (non persistant, multi-onglet sûr)
 - **Headers** : `Authorization: Token <token>`
@@ -232,6 +247,7 @@ Student ←──── Swipe ────→ Company
 #### 2. Permissions par Rôle
 
 **Étudiants :**
+
 - ✅ Voir/Modifier SON profil
 - ✅ Swiper sur entreprises
 - ✅ Voir SES matchs et entretiens
@@ -239,6 +255,7 @@ Student ←──── Swipe ────→ Company
 - ❌ Swiper au nom d'un autre
 
 **Entreprises :**
+
 - ✅ Voir/Modifier SON profil
 - ✅ Swiper sur étudiants
 - ✅ Voir SES matchs et entretiens
@@ -261,20 +278,21 @@ def current_user(request):
 
 #### 4. Protections en Place
 
-| Protection | Détail |
-|-----------|--------|
-| ❌ **Modification profil d'autre** | Impossible - `CanOnlyModifyOwnData` |
-| ❌ **Swipe au nom d'un autre** | Impossible - vérification propriété |
-| ❌ **Voir swipes d'une autre entreprise** | Impossible - filtre utilisateur |
-| ✅ **CV Upload validé** | Type MIME, max 5MB |
-| ✅ **Reset BD en production** | Désactivé - `DEBUG=False` |
-| ✅ **Direction swipe validée** | Doit être 'left' ou 'right' |
+| Protection                                | Détail                              |
+| ----------------------------------------- | ----------------------------------- |
+| ❌ **Modification profil d'autre**        | Impossible - `CanOnlyModifyOwnData` |
+| ❌ **Swipe au nom d'un autre**            | Impossible - vérification propriété |
+| ❌ **Voir swipes d'une autre entreprise** | Impossible - filtre utilisateur     |
+| ✅ **CV Upload validé**                   | Type MIME, max 5MB                  |
+| ✅ **Reset BD en production**             | Désactivé - `DEBUG=False`           |
+| ✅ **Direction swipe validée**            | Doit être 'left' ou 'right'         |
 
 ---
 
 ## ⚡ Commandes Utiles
 
 ### Docker (Backend)
+
 ```bash
 docker compose up -d              # Démarrer
 docker compose down               # Arrêter
@@ -284,6 +302,7 @@ docker compose down -v            # Reset complet (supprime la BDD)
 ```
 
 ### Django
+
 ```bash
 docker compose exec web python manage.py migrate          # Migrations
 docker compose exec web python manage.py setup_demo       # Données de démo
@@ -292,6 +311,7 @@ docker compose exec web python manage.py shell            # Shell Python
 ```
 
 ### Frontend
+
 ```bash
 cd src/frontend
 npm install           # Installer dépendances
@@ -303,20 +323,21 @@ npm run build         # Build production
 
 ## 🎨 Design System
 
-| Élément | Valeur |
-|---------|--------|
-| **Couleur primaire** | `#0d69f2` (bleu) |
-| **Background** | `#101722` (noir/bleu foncé) |
-| **Cards** | `#1E293B` avec glassmorphism |
-| **Police** | Plus Jakarta Sans |
-| **Icônes** | Material Symbols Outlined |
-| **Format** | Mobile-first (max 448px) |
+| Élément              | Valeur                       |
+| -------------------- | ---------------------------- |
+| **Couleur primaire** | `#0d69f2` (bleu)             |
+| **Background**       | `#101722` (noir/bleu foncé)  |
+| **Cards**            | `#1E293B` avec glassmorphism |
+| **Police**           | Plus Jakarta Sans            |
+| **Icônes**           | Material Symbols Outlined    |
+| **Format**           | Mobile-first (max 448px)     |
 
 ---
 
 ## 🔮 Prochaines Étapes (TODO)
 
 ### Priorité Haute
+
 - [ ] Notifications push pour nouveaux matchs
 - [ ] Chat/messagerie entre matchs
 - [ ] Planification d'entretiens depuis l'app
@@ -324,6 +345,7 @@ npm run build         # Build production
 - [ ] Audit logging (enregistrer les actions)
 
 ### Priorité Moyenne
+
 - [ ] Filtres de recherche (compétences, secteur)
 - [ ] Algorithme de recommandation
 - [ ] Statistiques pour les entreprises
@@ -331,6 +353,7 @@ npm run build         # Build production
 - [ ] Tests de sécurité automatisés
 
 ### Priorité Basse
+
 - [ ] Mode sombre/clair
 - [ ] PWA (installation mobile)
 - [ ] Export des données (CSV)
@@ -340,17 +363,20 @@ npm run build         # Build production
 ## 🐛 Dépannage
 
 ### Frontend ne charge pas
+
 ```bash
 cd src/frontend && npm run dev
 # Doit afficher : Local: http://localhost:3000
 ```
 
 ### Erreurs CORS
+
 - Vérifier que Django tourne : `docker compose logs -f web`
 - CORS configuré pour `localhost:3000` et `localhost:3001`
 - S'assurer que le backend répond : `curl http://localhost:8000/api/`
 
 ### Backend ne démarre pas
+
 ```bash
 docker compose logs web  # Voir les erreurs
 docker compose down -v   # Reset complet
@@ -358,6 +384,7 @@ docker compose up -d --build  # Redémarrer
 ```
 
 ### Reset complet
+
 ```bash
 docker compose down -v
 docker compose up -d --build

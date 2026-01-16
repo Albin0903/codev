@@ -1428,7 +1428,7 @@ const ProfileScreen: React.FC = () => {
               <SettingsItem icon="description" label="Conditions d'utilisation" />
           </div>
           
-          <button
+          {/* <button
             className="w-full mt-6 py-4 rounded-2xl border-2 border-red-500/30 text-red-400 font-bold text-sm hover:bg-red-500/10 transition-colors"
             onClick={async () => {
               await api.logout();
@@ -1436,7 +1436,7 @@ const ProfileScreen: React.FC = () => {
             }}
           >
               Déconnexion
-          </button>
+          </button> */}
       </div>
 
     </div>

@@ -21,6 +21,7 @@ urlpatterns = [
     path('', include(router.urls)),
     # Routes étudiants
     path('me/', api_views.current_user, name='current-user'),
+    path('me/finalize-plan/', api_views.finalize_priorities_and_plan, name='finalize-plan'),
     path('cv/', api_views.upload_cv, name='upload-cv'),
     path('photo/', api_views.upload_photo, name='upload-photo'),
     # Routes entreprises
@@ -33,5 +34,6 @@ urlpatterns = [
     # Auth
     path('login/', csrf_exempt(api_views.login_view), name='login'),
     path('logout/', api_views.logout_view, name='logout'),
+    path('register/', api_views.RegisterView.as_view(), name='register'),
 ]
 

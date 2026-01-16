@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from datetime import timedelta
+from .models import Student, Company, Swipe, Match, Interview
+from .services import plan_student_interviews
 import random
 
 from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill
@@ -55,6 +57,47 @@ def create_interview_for_match(match):
     )
     
     return interview
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny] # Important : permet l'accès sans être connecté
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            # 1. Création de l'User Django standard
+            user = User.objects.create_user(
+                username=serializer.validated_data['username'],
+                email=serializer.validated_data['email'],
+                password=serializer.validated_data['password']
+            )
+            
+            user_type = serializer.validated_data['user_type']
+
+            # 2. Création du profil associé (Student ou Company)
+            if user_type == 'student':
+                Student.objects.create(
+                    user=user,
+                    program="Formation à définir",
+                    year="Année à définir",
+                    school="Polytech Lyon"
+                )
+            elif user_type == 'company':
+                Company.objects.create(
+                    user=user,
+                    name=user.username,
+                    sector="Secteur à définir",
+                    contact_email=user.email,
+                    contact_name="À définir"
+                )
+
+            return Response({
+                "message": "Compte créé avec succès",
+                "user": UserSerializer(user).data,
+                "user_type": user_type
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -579,4 +622,17 @@ def reset_database(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+def finalize_priorities_and_plan(request):
+    ordered_ids = request.data.get('ordered_ids', [])
+    student = request.user.student
+    
+    for rank, match_id in enumerate(ordered_ids, start=1):
+        Match.objects.filter(id=match_id, student=student).update(student_priority=rank)
+    
+    plan_student_interviews(student)
+    
+    return Response({"message": "Planning généré avec succès au milieu de journée !"})
 

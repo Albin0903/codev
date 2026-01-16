@@ -150,11 +150,13 @@ class Match(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='matches')
     is_mutual = models.BooleanField(default=False, verbose_name="Match mutuel")
     created_at = models.DateTimeField(auto_now_add=True)
+    student_priority = models.PositiveIntegerField(default=0, verbose_name="Priorité étudiant")
 
     class Meta:
         verbose_name = "Match"
         verbose_name_plural = "Matchs"
         unique_together = ['student', 'company']
+        ordering = ['student_priority']
 
     def __str__(self):
         status = "✓ Mutuel" if self.is_mutual else "En attente"

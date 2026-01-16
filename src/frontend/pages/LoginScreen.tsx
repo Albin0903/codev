@@ -30,15 +30,15 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 overflow-hidden">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">JobFair Connect</h1>
-          <p className="text-slate-400 text-sm">Connectez-vous à votre compte</p>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      <div className="w-full max-w-lg z-10">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">JobFair Connect</h1>
+          <p className="text-slate-400 text-lg">Connectez-vous à votre compte</p>
         </div>
 
-        <div className="bg-[#1E293B] rounded-2xl p-5 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="bg-[#1E293B]/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
                 {error}
@@ -92,7 +92,7 @@ const LoginScreen: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => alert('Fonctionnalité à venir')}
+                onClick={() => navigate('/register')} // <--- LE CHANGEMENT EST ICI
                 className="flex-1 py-2 px-4 border border-slate-700 rounded-lg text-slate-300 hover:bg-slate-800/50 transition-colors text-sm font-medium"
               >
                 S'inscrire

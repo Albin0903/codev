@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { BottomNavigation } from './components/BottomNavigation';
+import React, { useEffect } from 'react';
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { BackgroundBlobs } from './components/BackgroundBlobs';
-import SwipeScreen from './pages/SwipeScreen';
-import ProfileScreen from './pages/ProfileScreen';
+import { BottomNavigation } from './components/BottomNavigation';
 import CompanyProfileScreen from './pages/CompanyProfileScreen';
-import CompanySwipeScreen from './pages/CompanySwipeScreen';
 import CompanyScheduleScreen from './pages/CompanyScheduleScreen';
-import ScheduleScreen from './pages/ScheduleScreen';
-import MatchScreen from './pages/MatchScreen';
+import CompanySwipeScreen from './pages/CompanySwipeScreen';
 import LoginScreen from './pages/LoginScreen';
+import MatchScreen from './pages/MatchScreen';
+import ProfileScreen from './pages/ProfileScreen';
+import RegisterScreen from './pages/RegisterScreen';
+import ScheduleScreen from './pages/ScheduleScreen';
+import SwipeScreen from './pages/SwipeScreen';
+import PriorityScreen from './pages/PriorityScreen';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = sessionStorage.getItem('jobfair_token');
   
   if (!token) {
-    // Redirection immédiate vers le login si pas de token
     return <Navigate to="/login" replace />;
   }
 
@@ -25,21 +26,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  // Masquer la barre de navigation sur certains écrans
-  const hideNav = ['/match', '/login'].includes(location.pathname);
+  
+  // 2. AJOUT DE '/register' ICI POUR CACHER LE MENU
+  const hideNav = ['/match', '/login', '/register'].includes(location.pathname);
   const showNav = !hideNav;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#edf2f8' }}>
       <div
-        className="relative flex flex-col h-[96vh] max-h-[900px] w-full max-w-[450px] overflow-hidden font-display shadow-2xl rounded-[40px] border-[8px]"
+        className="min-h-screen w-full flex flex-col relative  max-h-[900px] overflow-hidden font-display shadow-2xl"
         style={{
           backgroundColor: 'var(--bg-primary)',
           borderColor: 'var(--border-color)',
         }}
       >
       {/* iPhone Notch / Dynamic Island */}
-      <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
+      {/* <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgb(16,23,34), transparent)' }}></div>
             <div className="absolute top-0 left-0 right-0 flex justify-center pt-2">
               <div className="w-32 h-8 rounded-full flex items-center justify-end px-3 gap-2" style={{ backgroundColor: 'rgb(20,30,48)' }}>
@@ -47,29 +49,30 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }}></div>
               </div>
             </div>
-      </div>
+      </div> */}
 
       <BackgroundBlobs />
       
       <main
-        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12"
+        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12 flex flex-col"
         style={{ background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 40%)' }}
       >
-        {children}
+        <div className="flex-1 w-full">
+          {children}
+        </div>
       </main>
 
-      {/* Portal Target for Modals (keeps them inside the phone frame) */}
+      {/* Portal Target for Modals */}
       <div id="app-modal-container" className="absolute inset-0 z-[60] pointer-events-none"></div>
 
       {showNav && (
         <div className="bottom-nav-wrapper">
-            {/* Gradient Blur Mask for Bottom Nav */}
             <div
               className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-40"
               style={{ background: 'linear-gradient(to top, var(--bg-primary), transparent)' }}
             />
             
-            <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
+            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
                 <div className="pointer-events-auto">
                     <BottomNavigation />
                 </div>
@@ -82,7 +85,6 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const App: React.FC = () => {
-  // Initialize theme from localStorage or default to dark
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'dark';
     document.documentElement.classList.remove('light', 'dark');
@@ -93,10 +95,11 @@ const App: React.FC = () => {
     <HashRouter>
       <Layout>
         <Routes>
-          {/* Route publique */}
+          {/* Routes publiques */}
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/register" element={<RegisterScreen />} /> {/* Route publique ajoutée proprement */}
 
-          {/* Redirection de la racine vers /profile (qui est protégé) */}
+          {/* Redirection racine */}
           <Route path="/" element={<Navigate to="/profile" replace />} />
 
           {/* Routes protégées */}
@@ -153,6 +156,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <CompanyScheduleScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/priorities"
+            element={
+              <ProtectedRoute>
+                <PriorityScreen />
               </ProtectedRoute>
             }
           />
