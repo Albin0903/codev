@@ -51,16 +51,43 @@ export const api = {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      let errorMsg = 'Erreur lors de l\'inscription.';
+      let errorMsg = "Erreur lors de l'inscription.";
 
-      if (error.username) {
-        errorMsg = `Nom d'utilisateur : ${error.username[0]}`;
-      } else if (error.email) {
-        errorMsg = `Email : ${error.email[0]}`;
-      } else if (error.non_field_errors) {
-        errorMsg = error.non_field_errors[0];
-      } else if (error.detail) {
-        errorMsg = error.detail;
+      const firstString = (value: any): string | null => {
+        if (!value) return null;
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value) && value.length > 0) {
+          const v0 = value[0];
+          return typeof v0 === 'string' ? v0 : JSON.stringify(v0);
+        }
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      };
+
+      if (error && typeof error === 'object') {
+        const fieldsInOrder = ['username', 'email', 'password', 'user_type', 'non_field_errors', 'detail'];
+        const labels: Record<string, string> = {
+          username: "Nom d'utilisateur",
+          email: 'Email',
+          password: 'Mot de passe',
+          user_type: 'Type de compte',
+        };
+
+        for (const field of fieldsInOrder) {
+          const msg = firstString((error as any)[field]);
+          if (msg) {
+            errorMsg = labels[field] ? `${labels[field]} : ${msg}` : msg;
+            break;
+          }
+        }
+
+        if (errorMsg === "Erreur lors de l'inscription.") {
+          const keys = Object.keys(error as any);
+          if (keys.length > 0) {
+            const msg = firstString((error as any)[keys[0]]);
+            if (msg) errorMsg = msg;
+          }
+        }
       }
       
       throw new Error(errorMsg);
