@@ -140,6 +140,19 @@ const ProfileScreen: React.FC = () => {
             >
               <span className="material-symbols-outlined text-lg">edit</span>
             </button>
+            <button
+              className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-400/30 text-red-300 hover:text-red-200 hover:from-red-500/30 hover:to-pink-500/30 transition-all"
+              title="Déconnexion"
+              onClick={async () => {
+                try {
+                  await api.logout();
+                } finally {
+                  navigate('/login');
+                }
+              }}
+            >
+              <span className="material-symbols-outlined text-lg">power_settings_new</span>
+            </button>
           </div>
         </div>
 
