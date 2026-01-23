@@ -7,7 +7,13 @@ from django.urls import path
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.core.management import call_command
+from django.shortcuts import render, redirect
+from django.db import transaction
+from django.contrib import messages
+from django.utils.text import slugify
+from django.utils.crypto import get_random_string
 from io import StringIO
+import pandas as pd
 
 from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer
 
@@ -126,13 +132,159 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+class ExcelImportForm(forms.Form):
+    # On autorise Excel et CSV dans le libellé
+    excel_file = forms.FileField(label="Fichier source (.xlsx ou .csv)")
+
+
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
+    change_list_template = "admin/company_change_list.html"
     list_display = ['name', 'sector', 'contact_name', 'contact_email', 'created_at']
     list_filter = ['sector']
     search_fields = ['name', 'sector', 'contact_name', 'contact_email']
+    
+    # 2. Ajouter l'URL personnalisée pour l'import
+    def get_urls(self):
+        urls = super().get_urls()
+        new_urls = [
+            path('import-excel/', self.admin_site.admin_view(self.import_excel), name='company_import_excel'),
+        ]
+        return new_urls + urls
 
+    # 3. La vue qui gère l'importation
+    def import_excel(self, request):
+        if request.method == "POST":
+            form = ExcelImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                file = request.FILES["excel_file"]
+                filename = file.name.lower()
+                
+                try:
+                    # --- DÉTECTION DU FORMAT ---
+                    if filename.endswith('.csv'):
+                        try:
+                            df = pd.read_csv(file)
+                            if len(df.columns) < 2: 
+                                file.seek(0)
+                                df = pd.read_csv(file, sep=';')
+                        except Exception:
+                            file.seek(0)
+                            df = pd.read_csv(file, sep=';', encoding='latin-1')
+                    else:
+                        df = pd.read_excel(file)
 
+                    # --- NETTOYAGE ---
+                    df.columns = df.columns.str.strip()
+                    
+                    # On a seulement besoin de l'email et du nom maintenant
+                    required_columns = ['email', 'nom_entreprise']
+                    if not all(col in df.columns for col in required_columns):
+                        missing = [c for c in required_columns if c not in df.columns]
+                        messages.error(request, f"Colonnes manquantes : {', '.join(missing)}")
+                        return redirect("..")
+
+                    results = [] # Pour stocker les identifiants générés
+
+                    with transaction.atomic():
+                        for index, row in df.iterrows():
+                            email = str(row['email']).strip()
+                            nom_entreprise = str(row.get('nom_entreprise', 'Entreprise')).strip()
+                            
+                            if not email or email.lower() in ['nan', 'none', '']:
+                                continue 
+
+                            # --- GÉNÉRATION AUTOMATIQUE DES CREDENTIALS ---
+                            generated_pass = None
+                            is_new_account = False
+                            
+                            # 1. Génération du Username (ex: "Tech Corp" -> "tech_corp")
+                            base_username = slugify(nom_entreprise).replace('-', '_')
+                            username = base_username
+                            counter = 1
+                            # Si le username existe déjà, on ajoute un chiffre (tech_corp_1, tech_corp_2...)
+                            while User.objects.filter(username=username).exclude(email=email).exists():
+                                username = f"{base_username}_{counter}"
+                                counter += 1
+
+                            # 2. Gestion du User
+                            user = User.objects.filter(email=email).first()
+                            
+                            if not user:
+                                # C'est un nouveau compte : on génère un mot de passe
+                                generated_pass = get_random_string(length=10) # Mot de passe aléatoire
+                                user = User.objects.create_user(
+                                    username=username,
+                                    email=email,
+                                    password=generated_pass,
+                                    first_name=nom_entreprise,
+                                )
+                                is_new_account = True
+                            else:
+                                # Le compte existe déjà
+                                username = user.username # On garde l'ancien username
+                                generated_pass = "(Inchangé)"
+
+                            # 3. Gestion Entreprise
+                            company, created = Company.objects.get_or_create(
+                                user=user,
+                                defaults={
+                                    'name': nom_entreprise,
+                                    'sector': row.get('secteur', 'Non spécifié'),
+                                    'description': row.get('description_entreprise', ''),
+                                    'contact_email': email,
+                                    'contact_name': row.get('contact_name', 'RH'),
+                                }
+                            )
+
+                            # 4. Gestion Offre
+                            titre_raw = row.get('titre_offre')
+                            has_offer = pd.notna(titre_raw) and str(titre_raw).strip() not in ['', 'nan', 'None']
+                            if has_offer:
+                                if not InternshipOffer.objects.filter(company=company, title=str(titre_raw).strip()).exists():
+                                    InternshipOffer.objects.create(
+                                        company=company,
+                                        title=str(titre_raw).strip(),
+                                        description=row.get('description_offre', 'Voir détails'),
+                                        location=row.get('lieu', ''),
+                                        duration=row.get('duree', ''),
+                                        requirements=row.get('competences', '')
+                                    )
+
+                            # 5. Ajout au rapport de résultat
+                            results.append({
+                                'company': nom_entreprise,
+                                'username': username,
+                                'password': generated_pass,
+                                'email': email,
+                                'status': 'Nouveau' if is_new_account else 'Existant'
+                            })
+
+                    # Au lieu de rediriger, on affiche la page de résultats
+                    context = {
+                        'results': results,
+                        'title': 'Rapport d\'importation',
+                        'site_header': self.admin_site.site_header,
+                        'site_title': self.admin_site.site_title,
+                        'has_permission': True,
+                    }
+                    return render(request, "admin/import_results.html", context)
+
+                except Exception as e:
+                    messages.error(request, f"Erreur : {str(e)}")
+                    return redirect("..")
+        else:
+            form = ExcelImportForm()
+
+        context = {
+            'form': form,
+            'title': 'Importer Entreprises',
+            'site_header': self.admin_site.site_header,
+            'site_title': self.admin_site.site_title,
+            'has_permission': True,
+        }
+        return render(request, "admin/import_excel.html", context)
+    
 @admin.register(Swipe)
 class SwipeAdmin(admin.ModelAdmin):
     list_display = ['student', 'company', 'direction', 'created_at']
