@@ -37,7 +37,7 @@ npm run dev
 |---------|-----|--------------|
 | **App Étudiant** | http://localhost:3000 | `marie.dupont` / `test123` |
 | **App Entreprise** | http://localhost:3000 | `innovatech` / `test123` |
-| **Admin Django** | http://localhost:8000/admin/ | `admin` / `admin` |
+| **Admin Django** | http://localhost:8000/admin/ | `admin` / `admin123` |
 
 ---
 
