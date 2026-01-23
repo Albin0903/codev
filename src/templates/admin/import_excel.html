@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="padding: 20px; border-radius: 8px; max-width: 600px;">
+    <h2>Importer Entreprises & Offres</h2>
+    <p>Le fichier Excel doit contenir les colonnes suivantes :</p>
+    <ul>
+        <li><code>email</code> (Obligatoire, sert d'identifiant)</li>
+        <li><code>nom_entreprise</code></li>
+        <li><code>secteur</code></li>
+        <li><code>description_entreprise</code></li>
+        <li><code>titre_offre</code> (Si vide, crée l'entreprise sans offre)</li>
+        <li><code>description_offre</code></li>
+        <li><code>lieu</code></li>
+        <li><code>duree</code></li>
+    </ul>
+
+    <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="submit-row">
+            <input type="submit" value="Importer" class="default" style="padding: 10px 20px; background: #0d69f2; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        </div>
+    </form>
+</div>
+{% endblock %}

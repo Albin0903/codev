@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="padding: 20px; border-radius: 8px;">
+    <h2>✅ Importation Terminée</h2>
+    <p>Voici les identifiants générés pour les entreprises. <strong>Copiez ces informations maintenant</strong>, les mots de passe ne seront plus visibles après.</p>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #f8f9fa; text-align: left;">
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Entreprise</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Login (Username)</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Mot de passe</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Email Contact</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr style="border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 12px;">{{ row.company }}</td>
+                <td style="padding: 12px; font-family: monospace; font-weight: bold; color: #0d69f2;">{{ row.username }}</td>
+                <td style="padding: 12px; font-family: monospace;">{{ row.password }}</td>
+                <td style="padding: 12px;">{{ row.email }}</td>
+                <td style="padding: 12px;">
+                    {% if row.status == 'Nouveau' %}
+                        <span style="color: green;">★ Créé</span>
+                    {% else %}
+                        <span style="color: gray;">Existant</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 30px;">
+        <a href="../" class="button" style="padding: 10px 20px; background: #666; color: white; text-decoration: none; border-radius: 4px;">Retour à la liste</a>
+    </div>
+</div>
+{% endblock %}
