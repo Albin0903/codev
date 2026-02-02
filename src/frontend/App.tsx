@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { BackgroundBlobs } from './components/BackgroundBlobs';
-import { BottomNavigation } from './components/BottomNavigation';
+// On importe TopNavigation à la place (ou en plus) de BottomNavigation
+import { TopNavigation } from './components/TopNavigation';
 import CompanyProfileScreen from './pages/CompanyProfileScreen';
 import CompanyScheduleScreen from './pages/CompanyScheduleScreen';
 import CompanySwipeScreen from './pages/CompanySwipeScreen';
@@ -13,48 +14,30 @@ import ScheduleScreen from './pages/ScheduleScreen';
 import SwipeScreen from './pages/SwipeScreen';
 import PriorityScreen from './pages/PriorityScreen';
 
-// Composant pour protéger les routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = sessionStorage.getItem('jobfair_token');
-  
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   
-  // 2. AJOUT DE '/register' ICI POUR CACHER LE MENU
   const hideNav = ['/match', '/login', '/register'].includes(location.pathname);
   const showNav = !hideNav;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#edf2f8' }}>
-      <div
-        className="min-h-screen w-full flex flex-col relative  max-h-[900px] overflow-hidden font-display shadow-2xl"
-        style={{
-          backgroundColor: 'var(--bg-primary)',
-          borderColor: 'var(--border-color)',
-        }}
-      >
-      {/* iPhone Notch / Dynamic Island */}
-      {/* <div className="absolute top-0 left-0 right-0 h-16 z-50 pointer-events-none">
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgb(16,23,34), transparent)' }}></div>
-            <div className="absolute top-0 left-0 right-0 flex justify-center pt-2">
-              <div className="w-32 h-8 rounded-full flex items-center justify-end px-3 gap-2" style={{ backgroundColor: 'rgb(20,30,48)' }}>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}></div>
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }}></div>
-              </div>
-            </div>
-      </div> */}
-
+    /* 1. On retire le centrage forcé et la hauteur max pour un vrai look Web */
+    <div className="min-h-screen w-full flex flex-col relative font-display bg-[#0f172a]">
+      
       <BackgroundBlobs />
       
+      {/* 2. Barre de navigation fixée en HAUT */}
+      {showNav && <TopNavigation />}
+      
+      {/* 3. On ajoute un padding-top (pt-20) pour que le contenu ne soit pas caché sous la barre */}
       <main
-        className="flex-1 relative z-10 overflow-y-auto no-scrollbar w-full pt-12 flex flex-col"
+        className={`flex-1 relative z-10 w-full flex flex-col ${showNav ? 'pt-20' : ''}`}
         style={{ background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 40%)' }}
       >
         <div className="flex-1 w-full">
@@ -62,24 +45,10 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
         </div>
       </main>
 
-      {/* Portal Target for Modals */}
-      <div id="app-modal-container" className="absolute inset-0 z-[60] pointer-events-none"></div>
+      {/* Portal Target for Modals - Passé en fixed z-[150] pour être au dessus de tout */}
+      <div id="app-modal-container" className="fixed inset-0 z-[150] pointer-events-none"></div>
 
-      {showNav && (
-        <div className="bottom-nav-wrapper">
-            <div
-              className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-40"
-              style={{ background: 'linear-gradient(to top, var(--bg-primary), transparent)' }}
-            />
-            
-            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
-                <div className="pointer-events-auto">
-                    <BottomNavigation />
-                </div>
-            </div>
-        </div>
-      )}
-      </div>
+      {/* 4. On a supprimé toute la div "bottom-nav-wrapper" qui était ici */}
     </div>
   );
 };
@@ -87,7 +56,6 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 const App: React.FC = () => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'dark';
-    document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(savedTheme);
   }, []);
 
@@ -95,78 +63,19 @@ const App: React.FC = () => {
     <HashRouter>
       <Layout>
         <Routes>
-          {/* Routes publiques */}
           <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<RegisterScreen />} /> {/* Route publique ajoutée proprement */}
-
-          {/* Redirection racine */}
+          <Route path="/register" element={<RegisterScreen />} />
           <Route path="/" element={<Navigate to="/profile" replace />} />
 
           {/* Routes protégées */}
-          <Route 
-            path="/swipe" 
-            element={
-              <ProtectedRoute>
-                <SwipeScreen />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <ProfileScreen />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/schedule" 
-            element={
-              <ProtectedRoute>
-                <ScheduleScreen />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/match" 
-            element={
-              <ProtectedRoute>
-                <MatchScreen />
-              </ProtectedRoute>
-            } 
-          />
-          <Route
-            path="/company/profile"
-            element={
-              <ProtectedRoute>
-                <CompanyProfileScreen />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/company/swipe"
-            element={
-              <ProtectedRoute>
-                <CompanySwipeScreen />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/company/matches"
-            element={
-              <ProtectedRoute>
-                <CompanyScheduleScreen />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/priorities"
-            element={
-              <ProtectedRoute>
-                <PriorityScreen />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/swipe" element={<ProtectedRoute><SwipeScreen /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
+          <Route path="/schedule" element={<ProtectedRoute><ScheduleScreen /></ProtectedRoute>} />
+          <Route path="/match" element={<ProtectedRoute><MatchScreen /></ProtectedRoute>} />
+          <Route path="/company/profile" element={<ProtectedRoute><CompanyProfileScreen /></ProtectedRoute>} />
+          <Route path="/company/swipe" element={<ProtectedRoute><CompanySwipeScreen /></ProtectedRoute>} />
+          <Route path="/company/matches" element={<ProtectedRoute><CompanyScheduleScreen /></ProtectedRoute>} />
+          <Route path="/priorities" element={<ProtectedRoute><PriorityScreen /></ProtectedRoute>} />
         </Routes>
       </Layout>
     </HashRouter>

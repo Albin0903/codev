@@ -83,7 +83,7 @@ const CompanyProfileScreen: React.FC = () => {
             api.clearAuth();
             navigate('/login');
           }}
-          className="px-4 py-2 rounded-lg bg-primary text-white font-semibold shadow-lg hover:brightness-110 transition"
+          className="px-4 py-2 rounded-lg bg-pink-500 text-white font-semibold shadow-lg hover:brightness-110 transition"
         >
           Se connecter
         </button>
@@ -105,16 +105,16 @@ const CompanyProfileScreen: React.FC = () => {
                   className="w-20 h-20 rounded-2xl object-cover border-2 border-white/20 shadow-xl bg-white"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-xl font-bold border-2 border-white/20 shadow-xl">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xl font-bold border-2 border-white/20 shadow-xl">
                   {company?.name?.[0] || 'E'}
                 </div>
               )}
               <button
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white/10 text-white text-[11px] border border-white/20 hover:bg-white/20"
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/80 text-white text-[11px] border border-white/20 hover:bg-pink-500 transition-colors"
                 onClick={() => logoInputRef.current?.click()}
                 disabled={uploadingLogo}
               >
-                {uploadingLogo ? 'Import...' : 'Changer'}
+                {uploadingLogo ? '...' : 'Changer'}
               </button>
               <input
                 ref={logoInputRef}
@@ -129,40 +129,19 @@ const CompanyProfileScreen: React.FC = () => {
               />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-300 font-semibold">Entreprise</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-pink-400 font-semibold">Profil</p>
               <h1 className="text-2xl font-bold text-white">{company?.name || 'Entreprise'}</h1>
               <p className="text-slate-300 text-sm">{company?.sector || 'Secteur non défini'}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            {company?.logo_url && (
-              <button
-                className="p-2 rounded-xl bg-white/10 text-red-300 border border-white/10 hover:bg-white/20"
-                onClick={async () => {
-                  try {
-                    const updated = await api.deleteCompanyLogo();
-                    setCompany(updated);
-                  } catch (err: any) {
-                    alert(err.message || 'Suppression impossible');
-                  }
-                }}
-              >
-                <span className="material-symbols-outlined text-sm">delete</span>
-              </button>
-            )}
             <button
-              className="p-2 rounded-xl bg-gradient-to-r from-cyan-500/30 to-emerald-500/30 text-emerald-100 border border-emerald-400/30 hover:brightness-110"
+              className="p-2 rounded-xl bg-pink-500/20 text-pink-300 border border-pink-400/30 hover:bg-pink-500/30 transition-all"
               onClick={() => setEditing(true)}
             >
               <span className="material-symbols-outlined text-sm">edit</span>
             </button>
-            <button
-                          className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-400/30 text-red-300 hover:text-red-200 hover:from-red-500/30 hover:to-pink-500/30 transition-all"
-                          title="Déconnexion"
-                          onClick={handleLogout}
-                        >
-                          <span className="material-symbols-outlined text-lg">power_settings_new</span>
-             </button>
+            
           </div>
         </div>
 
@@ -177,23 +156,28 @@ const CompanyProfileScreen: React.FC = () => {
       </div>
 
       <div>
-        <h2 className="text-lg font-bold text-white mb-3">Offres de stage</h2>
+        <h2 className="text-lg font-bold text-white mb-3">Offres actives</h2>
         {!Array.isArray(offers) || offers.length === 0 ? (
           <div className="text-slate-400 text-sm">Aucune offre pour le moment.</div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {offers.map((offer) => (
               <div key={offer.id} className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-white/10 rounded-2xl p-4 space-y-2">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-white font-semibold text-sm">{offer.title}</p>
-                    <p className="text-slate-400 text-xs">{offer.location || 'Localisation non renseignée'}</p>
+                    <p className="text-slate-400 text-xs">{offer.location}</p>
                   </div>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">Stage</span>
+                  {/* Badge STAGE en Violet */}
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Stage</span>
                 </div>
-                <p className="text-slate-300 text-xs whitespace-pre-wrap break-words">{offer.description || 'Pas de description'}</p>
-                <p className="text-slate-400 text-xs">Durée : {offer.duration || 'Non renseignée'}</p>
+                <p className="text-slate-300 text-xs line-clamp-2">{offer.description}</p>
                 {offer.requirements && <p className="text-slate-400 text-xs">Prérequis : {offer.requirements}</p>}
+                <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] text-indigo-400 font-bold uppercase tracking-wider">
+        
+                  <span>DURÉE : {offer.duration}</span>
+
+                </div>
               </div>
             ))}
           </div>
@@ -201,19 +185,20 @@ const CompanyProfileScreen: React.FC = () => {
       </div>
 
       {editing && createPortal(
-        <div className="absolute inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 pointer-events-auto">
-          <div className="w-full max-w-md bg-[#0f172a] rounded-2xl border border-white/10 shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 pointer-events-auto">
+          {/* Fenêtre en plus grand (max-w-2xl) */}
+          <div className="w-full max-w-2xl bg-[#0f172a] rounded-[2rem] border border-white/10 shadow-2xl p-8 max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300 font-semibold">Edition</p>
-                <h3 className="text-xl font-bold text-white">Profil entreprise</h3>
+                <p className="text-xs uppercase tracking-[0.2em] text-pink-400 font-semibold">Modification</p>
+                <h3 className="text-2xl font-bold text-white">Profil entreprise</h3>
               </div>
               <button className="p-2 rounded-full bg-white/10 text-slate-400 hover:text-white" onClick={() => setEditing(false)}>
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <TextField label="Nom" value={formData.name} onChange={(v) => setFormData({ ...formData, name: v })} />
               <TextField label="Secteur" value={formData.sector} onChange={(v) => setFormData({ ...formData, sector: v })} />
               <TextField label="Site web" value={formData.website} onChange={(v) => setFormData({ ...formData, website: v })} />
@@ -226,10 +211,10 @@ const CompanyProfileScreen: React.FC = () => {
               <TextArea label="Avantages" value={formData.benefits} onChange={(v) => setFormData({ ...formData, benefits: v })} className="md:col-span-2" />
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button className="px-4 py-2 rounded-lg bg-white/10 text-slate-300" onClick={() => setEditing(false)}>Annuler</button>
+            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-white/5">
+              <button className="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold" onClick={() => setEditing(false)}>Annuler</button>
               <button
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold shadow-lg hover:brightness-110"
+                className="px-8 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg hover:brightness-110"
                 onClick={async () => {
                   try {
                     const updated = await api.updateCurrentCompany(formData);
@@ -240,7 +225,7 @@ const CompanyProfileScreen: React.FC = () => {
                   }
                 }}
               >
-                Enregistrer
+                Sauvegarder
               </button>
             </div>
           </div>
@@ -251,38 +236,37 @@ const CompanyProfileScreen: React.FC = () => {
   );
 };
 
-const InfoTile = ({ icon, label, value, subtitle, multiline, isLink }: { icon: string; label: string; value: string; subtitle?: string; multiline?: boolean; isLink?: boolean; }) => (
-  <div className="bg-white/5 border border-white/10 rounded-2xl p-3 shadow-lg">
-    <div className="flex items-center gap-2 mb-1 text-slate-300 text-xs font-semibold">
-      <span className="material-symbols-outlined text-sm text-emerald-300">{icon}</span>
+const InfoTile = ({ icon, label, value, subtitle, multiline, isLink }: any) => (
+  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 shadow-lg group hover:border-pink-500/30 transition-all">
+    <div className="flex items-center gap-2 mb-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
+      <span className="material-symbols-outlined text-sm text-pink-400">{icon}</span>
       {label}
     </div>
     {isLink && value ? (
-      <a href={value} target="_blank" rel="noreferrer" className="text-cyan-200 text-sm font-semibold hover:underline break-words">{value}</a>
+      <a href={value} target="_blank" rel="noreferrer" className="text-pink-300 text-sm font-semibold hover:underline break-words block">{value}</a>
     ) : (
-      <p className={`text-slate-200 text-sm ${multiline ? 'whitespace-pre-wrap break-words' : 'truncate'}`}>{value}</p>
+      <p className={`text-slate-200 text-sm font-medium ${multiline ? 'whitespace-pre-wrap break-words' : 'truncate'}`}>{value}</p>
     )}
-    {subtitle && <p className="text-slate-400 text-xs">{subtitle}</p>}
+    {subtitle && <p className="text-slate-500 text-xs mt-1">{subtitle}</p>}
   </div>
 );
 
-const TextField = ({ label, value, onChange }: { label: string; value: any; onChange: (v: string) => void }) => (
+const TextField = ({ label, value, onChange }: any) => (
   <div className="flex flex-col gap-1">
-    <label className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">{label}</label>
+    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{label}</label>
     <input
-      className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none"
+      className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-white focus:border-pink-500 outline-none transition-all font-medium"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
   </div>
 );
 
-const TextArea = ({ label, value, onChange, className }: { label: string; value: any; onChange: (v: string) => void; className?: string }) => (
+const TextArea = ({ label, value, onChange, className }: any) => (
   <div className={`flex flex-col gap-1 ${className || ''}`}>
-    <label className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">{label}</label>
+    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{label}</label>
     <textarea
-      className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-white placeholder:text-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none resize-none"
-      rows={3}
+      className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-white focus:border-pink-500 outline-none transition-all font-medium min-h-[100px]"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
