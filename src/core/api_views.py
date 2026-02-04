@@ -73,7 +73,9 @@ class RegisterView(APIView):
             user = User.objects.create_user(
                 username=serializer.validated_data['username'],
                 email=serializer.validated_data['email'],
-                password=serializer.validated_data['password']
+                password=serializer.validated_data['password'],
+                first_name=serializer.validated_data.get('first_name', ''),
+                last_name=serializer.validated_data.get('last_name', '')
             )
             
             user_type = serializer.validated_data['user_type']
@@ -365,17 +367,28 @@ def current_user(request):
 @permission_classes([AllowAny])
 @csrf_exempt
 def login_view(request):
-    """Endpoint de connexion - détecte automatiquement le type d'utilisateur"""
-    username = request.data.get('username')
+    """Endpoint de connexion - accepte email ou username (prenom.nom)"""
+    identifier = request.data.get('username')  # Can be email or username
     password = request.data.get('password')
     
-    if not username or not password:
+    if not identifier or not password:
         return Response(
-            {'error': 'Username and password required'},
+            {'error': 'Identifiant et mot de passe requis'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    user = authenticate(request, username=username, password=password)
+    # Try to find user by email first, then by username
+    user = None
+    if '@' in identifier:
+        # Looks like an email
+        try:
+            user_obj = User.objects.get(email__iexact=identifier)
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            pass
+    else:
+        # Try as username (prenom.nom)
+        user = authenticate(request, username=identifier, password=password)
     
     if user is not None:
         login(request, user)

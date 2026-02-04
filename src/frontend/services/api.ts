@@ -32,12 +32,14 @@ function clearAuth() {
 // API Service
 export const api = {
   // --- NOUVELLE MÉTHODE AJOUTÉE ICI (DANS L'OBJET) ---
-  async register(userData: { username: string, email: string, password: string, userType: 'student' | 'company' }) {
+  async register(userData: { username: string, email: string, password: string, userType: 'student' | 'company', firstName?: string, lastName?: string }) {
     const payload = {
       username: userData.username,
       email: userData.email,
       password: userData.password,
-      user_type: userData.userType 
+      user_type: userData.userType,
+      first_name: userData.firstName || '',
+      last_name: userData.lastName || ''
     };
 
     const response = await fetch(`${API_BASE_URL}/register/`, {

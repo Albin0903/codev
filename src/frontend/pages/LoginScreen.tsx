@@ -7,6 +7,7 @@ const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +39,7 @@ const LoginScreen: React.FC = () => {
       <div className="w-full max-w-sm md:max-w-md z-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">
-            Adopte<span className="text-pink-500">UnStage</span>
+            Adopte<span className="text-pink-500">UnStagiaire</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base">Connectez-vous à votre compte</p>
         </div>
@@ -53,14 +54,14 @@ const LoginScreen: React.FC = () => {
 
             <div>
               <label className="block text-slate-400 text-xs md:text-sm font-medium mb-2 uppercase tracking-wider">
-                Nom d'utilisateur
+                Email ou identifiant
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
-                placeholder="etudiant"
+                placeholder="prenom.nom ou email@exemple.com"
                 required
                 autoFocus
               />
@@ -70,14 +71,23 @@ const LoginScreen: React.FC = () => {
               <label className="block text-slate-400 text-xs md:text-sm font-medium mb-2 uppercase tracking-wider">
                 Mot de passe
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 md:px-5 md:py-4 pr-12 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-xl">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                </button>
+              </div>
             </div>
 
             <button

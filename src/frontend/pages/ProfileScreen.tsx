@@ -29,9 +29,21 @@ const ProfileScreen: React.FC = () => {
       try {
         const data = await api.getCurrentUser();
         setUserData(data);
+        
+        // Extract first_name and last_name from username if not set
+        let firstName = data?.user?.first_name || '';
+        let lastName = data?.user?.last_name || '';
+        if ((!firstName || !lastName) && data?.user?.username) {
+          const parts = data.user.username.split('.');
+          if (parts.length >= 2) {
+            firstName = firstName || parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+            lastName = lastName || parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+          }
+        }
+        
         setFormData({
-          first_name: data?.user?.first_name || '',
-          last_name: data?.user?.last_name || '',
+          first_name: firstName,
+          last_name: lastName,
           school: data?.school || '',
           school_url: data?.school_url || '',
           availability: data?.availability || '',
