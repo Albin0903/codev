@@ -151,7 +151,8 @@ Student ←──── Swipe ────→ Company
 ### Authentification
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| `POST` | `/api/login/` | Connexion (retourne token) |
+| `POST` | `/api/register/` | Inscription (email, prénom, nom, mdp) |
+| `POST` | `/api/login/` | Connexion (email ou prenom.nom + mdp) |
 | `POST` | `/api/logout/` | Déconnexion |
 
 ### Étudiants
@@ -174,14 +175,16 @@ Student ←──── Swipe ────→ Company
 | `POST` | `/api/company/swipes/` | Swiper sur un étudiant |
 | `GET` | `/api/company/matches/` | Matchs mutuels |
 | `GET` | `/api/company/interviews/` | Entretiens planifiés |
-| `GET/POST` | `/api/company/offers/` | Offres de stage |
+| `GET/POST/PATCH/DELETE` | `/api/company/offers/` | CRUD offres de stage |
 
 ---
 
 ## ✅ Fonctionnalités Implémentées
 
 ### 🔐 Authentification
-- [x] Page de connexion (étudiants et entreprises)
+- [x] Page de connexion (email ou prénom.nom)
+- [x] Page d'inscription (étudiants et entreprises)
+- [x] Identifiant généré automatiquement (prénom.nom)
 - [x] Token authentication (sessionStorage)
 - [x] Détection automatique du type d'utilisateur (Student/Company)
 - [x] Déconnexion
@@ -195,7 +198,9 @@ Student ←──── Swipe ────→ Company
 ### 🏢 Profil Entreprise
 - [x] Affichage des informations
 - [x] Modification du profil
-- [x] Gestion des offres de stage
+- [x] Gestion complète des offres de stage (CRUD)
+- [x] Modal d'ajout/modification d'offres
+- [x] Confirmation de suppression intégrée
 
 ### 🔄 Système de Swipe
 - [x] Swipe étudiant → entreprises
@@ -212,6 +217,10 @@ Student ←──── Swipe ────→ Company
 ### 📅 Planning
 - [x] Affichage des entretiens planifiés
 - [x] Vue agenda pour étudiants et entreprises
+- [x] Catégorisation exclusive (Entretiens > Matchs > Likes)
+- [x] Badges countdown (Jour J, J-1, J-X)
+- [x] Affichage des offres de stage dans les détails
+- [x] Date du jour affichée (version desktop)
 
 ### ⚙️ Administration
 - [x] Interface admin Django personnalisée
@@ -305,12 +314,12 @@ npm run build         # Build production
 
 | Élément | Valeur |
 |---------|--------|
-| **Couleur primaire** | `#0d69f2` (bleu) |
-| **Background** | `#101722` (noir/bleu foncé) |
+| **Couleur primaire** | `#ec4899` (pink-500) / `#e11d48` (rose-600) |
+| **Background** | `#0f172a` (slate-900) |
 | **Cards** | `#1E293B` avec glassmorphism |
 | **Police** | Plus Jakarta Sans |
 | **Icônes** | Material Symbols Outlined |
-| **Format** | Mobile-first (max 448px) |
+| **Format** | Mobile-first, responsive (md: breakpoints) |
 
 ---
 
