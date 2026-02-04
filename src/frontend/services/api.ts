@@ -219,6 +219,59 @@ export const api = {
     return Array.isArray(data) ? data : (data.results || []);
   },
 
+  // Create a new internship offer
+  async createCompanyOffer(payload: { title: string; description?: string; location?: string; duration?: string; requirements?: string }) {
+    const token = getToken();
+    const headers: Record<string,string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Token ${token}`;
+    const response = await fetch(`${API_BASE_URL}/company/offers/`, {
+      method: 'POST',
+      credentials: token ? 'omit' : 'include',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || err.title?.[0] || 'Failed to create offer');
+    }
+    return response.json();
+  },
+
+  // Update an internship offer
+  async updateCompanyOffer(offerId: number, payload: { title?: string; description?: string; location?: string; duration?: string; requirements?: string }) {
+    const token = getToken();
+    const headers: Record<string,string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Token ${token}`;
+    const response = await fetch(`${API_BASE_URL}/company/offers/${offerId}/`, {
+      method: 'PATCH',
+      credentials: token ? 'omit' : 'include',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to update offer');
+    }
+    return response.json();
+  },
+
+  // Delete an internship offer
+  async deleteCompanyOffer(offerId: number) {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    const response = await fetch(`${API_BASE_URL}/company/offers/${offerId}/`, {
+      method: 'DELETE',
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to delete offer');
+    }
+    return true;
+  },
+
   // Update current user / student (partial)
   async updateCurrentUser(payload: Record<string, any>) {
     const token = getToken();
@@ -300,6 +353,19 @@ export const api = {
     return response.json();
   },
 
+  // Get swipe history (student likes)
+  async getSwipes() {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    const response = await fetch(`${API_BASE_URL}/swipes/`, {
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    if (!response.ok) throw new Error('Failed to fetch swipes');
+    return response.json();
+  },
+
   // Get all matches
   async getMatches() {
     const token = getToken();
@@ -349,6 +415,19 @@ export const api = {
       headers,
     });
     if (!response.ok) throw new Error('Failed to fetch company matches');
+    return response.json();
+  },
+
+  // Get company swipe history
+  async getCompanySwipes() {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    const response = await fetch(`${API_BASE_URL}/company/swipes/`, {
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    if (!response.ok) throw new Error('Failed to fetch company swipes');
     return response.json();
   },
 
@@ -494,6 +573,23 @@ export const api = {
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || 'Failed to toggle photo visibility');
+    }
+    return response.json();
+  },
+
+  // Get current forum info
+  async getForum() {
+    const token = getToken();
+    const headers: Record<string,string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const response = await fetch(`${API_BASE_URL}/forum/`, {
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    
+    if (!response.ok) {
+      return null;
     }
     return response.json();
   },

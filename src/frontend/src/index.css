@@ -85,3 +85,274 @@
     display: none !important;
   }
 }
+
+/* Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Card enter animation from bottom */
+@keyframes card-enter {
+  0% {
+    transform: translateY(100%) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-card-enter {
+  animation: card-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Light theme overrides - apply to all dark bg classes */
+.light {
+  /* Main backgrounds */
+  --tw-bg-opacity: 1;
+}
+
+.light .bg-\[\#0f172a\] {
+  background-color: #e9f1ff !important;
+}
+
+.light .bg-\[\#1e293b\] {
+  background-color: #d7e4ff !important;
+}
+
+.light .bg-slate-900\/95 {
+  background-color: rgba(215, 228, 255, 0.98) !important;
+}
+
+.light .bg-slate-800\/60 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.light .bg-slate-800\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.light .bg-white\/5 {
+  background-color: rgba(0, 40, 100, 0.06) !important;
+}
+
+.light .bg-white\/10 {
+  background-color: rgba(0, 40, 100, 0.08) !important;
+}
+
+/* Text colors */
+.light .text-white {
+  color: #0b1f3a !important;
+}
+
+.light .text-slate-400 {
+  color: #4b5f7c !important;
+}
+
+.light .text-slate-500 {
+  color: #5a6d8a !important;
+}
+
+.light .text-slate-300 {
+  color: #1f3656 !important;
+}
+
+/* Borders */
+.light .border-white\/10,
+.light .border-white\/5 {
+  border-color: rgba(12, 43, 85, 0.12) !important;
+}
+
+/* Hover states */
+.light .hover\:bg-white\/20:hover {
+  background-color: rgba(0, 40, 100, 0.15) !important;
+}
+
+.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 40, 100, 0.1) !important;
+}
+
+/* Keep pink accent colors as-is but adjust backgrounds */
+.light .bg-pink-500\/20 {
+  background-color: rgba(236, 72, 153, 0.15) !important;
+}
+
+.light .bg-pink-500\/10 {
+  background-color: rgba(236, 72, 153, 0.12) !important;
+}
+
+/* Bottom navigation - glassmorphism in light mode */
+.light .bg-\[\#0f172a\]\/95 {
+  background-color: rgba(215, 228, 255, 0.85) !important;
+}
+
+.light .bg-\[\#182334\]\/80 {
+  background-color: rgba(200, 218, 250, 0.9) !important;
+}
+
+/* Bottom nav bar glassmorphism for light mode */
+.light .bottom-nav-bar {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(0, 40, 100, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 40, 100, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+.light .bottom-nav-bar .text-white\/50 {
+  color: rgba(11, 31, 58, 0.45) !important;
+}
+
+.light .bottom-nav-bar .text-white\/80 {
+  color: rgba(11, 31, 58, 0.7) !important;
+}
+
+.light .bottom-nav-bar .text-white {
+  color: #ffffff !important;
+}
+
+/* Keep pink indicator in light mode */
+.light .bottom-nav-bar .bg-pink-500 {
+  background-color: rgb(236, 72, 153) !important;
+}
+
+/* Keep text white on active tab in light mode */
+.light .bottom-nav-bar a.scale-110 span {
+  color: #ffffff !important;
+}
+
+/* Bottom nav glassmorphism for light mode */
+.light .bottom-nav > div {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(0, 40, 100, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 40, 100, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Keep text visible in bottom nav for light mode */
+.light .bottom-nav .text-white,
+.light .bottom-nav .text-primary {
+  color: #ec4899 !important;
+}
+
+.light .bottom-nav .text-slate-400,
+.light .bottom-nav .text-slate-500 {
+  color: rgba(30, 58, 95, 0.5) !important;
+}
+
+/* Slate backgrounds for modal dialogs */
+.light .bg-slate-800\/40 {
+  background-color: rgba(0, 40, 100, 0.08) !important;
+}
+
+/* Min-h-screen backgrounds */
+.light .min-h-screen.bg-\[\#0f172a\] {
+  background-color: #e9f1ff !important;
+}
+
+/* Cards and modals shadows */
+.light .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 40, 100, 0.15) !important;
+}
+
+/* Edit modal styling for light mode */
+.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-900\/95 {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Keep modal text dark in light mode */
+.light .bg-slate-900 .text-white,
+.light .bg-slate-900\/95 .text-white {
+  color: #0b1f3a !important;
+}
+
+/* Keep modal labels visible */
+.light .bg-slate-900 .text-slate-500,
+.light .bg-slate-900\/95 .text-slate-500 {
+  color: #5a6d8a !important;
+}
+
+/* Fix inputs in edit modals for light mode */
+.light .bg-slate-900 input,
+.light .bg-slate-900 textarea,
+.light .bg-slate-900\/95 input,
+.light .bg-slate-900\/95 textarea {
+  background-color: rgba(0, 40, 100, 0.06) !important;
+  color: #0b1f3a !important;
+  border-color: rgba(12, 43, 85, 0.15) !important;
+}
+
+.light .bg-slate-900 input::placeholder,
+.light .bg-slate-900 textarea::placeholder {
+  color: #5a6d8a !important;
+}
+
+/* Gradient buttons should keep white text */
+.light .bg-gradient-to-r.from-pink-500 .text-white,
+.light .from-pink-500.to-rose-600 {
+  color: #ffffff !important;
+}
+
+.light [class*="from-pink-500"][class*="to-rose-600"] {
+  color: #ffffff !important;
+}
+
+/* Fixed layouts in light mode */
+.light .fixed.inset-0.bg-\[\#0f172a\] {
+  background-color: #e9f1ff !important;
+}
+
+/* Top nav bar glassmorphism for light mode */
+.light .top-nav-bar {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(0, 40, 100, 0.1) !important;
+}
+
+.light .top-nav-bar .text-white {
+  color: #0b1f3a !important;
+}
+
+.light .top-nav-bar .text-pink-500 {
+  color: #ec4899 !important;
+}
+
+.light .top-nav-bar .text-slate-400 {
+  color: #5a6d8a !important;
+}
+
+.light .top-nav-bar .text-slate-500 {
+  color: #6b7c99 !important;
+}
+
+.light .top-nav-bar .bg-white\/5 {
+  background-color: rgba(0, 40, 100, 0.05) !important;
+}
+
+.light .top-nav-bar .border-white\/5,
+.light .top-nav-bar .border-white\/10 {
+  border-color: rgba(0, 40, 100, 0.1) !important;
+}
+
+/* Keep active tab pink */
+.light .top-nav-bar .bg-pink-500 {
+  background-color: #ec4899 !important;
+  color: #ffffff !important;
+}
+
+.light .top-nav-bar .bg-pink-500 .text-white,
+.light .top-nav-bar .bg-pink-500 span {
+  color: #ffffff !important;
+}

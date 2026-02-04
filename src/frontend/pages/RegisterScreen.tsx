@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api'; // On mettra ça à jour juste après
+import { api } from '../services/api';
 
 const RegisterScreen: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -8,7 +8,7 @@ const RegisterScreen: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    userType: 'student' // 'student' ou 'company' par défaut
+    userType: 'student'
   });
   
   const [error, setError] = useState('');
@@ -31,9 +31,7 @@ const RegisterScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      // On suppose que ta méthode register existe dans l'api
       await api.register(formData);
-      // Redirection vers le login après succès ou connexion directe
       alert('Compte créé avec succès ! Connectez-vous.');
       navigate('/login'); 
     } catch (err: any) {
@@ -44,37 +42,50 @@ const RegisterScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 overflow-hidden">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#0f172a]">
+      
+      {/* Background Blobs */}
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-pink-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-rose-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+      
+      <div className="w-full max-w-sm md:max-w-md z-10">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Rejoignez JobFair</h1>
-          <p className="text-slate-400 text-sm">Créez votre compte dès maintenant</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Rejoignez JobFair</h1>
+          <p className="text-slate-400 text-sm md:text-base">Créez votre compte dès maintenant</p>
         </div>
 
-        <div className="bg-[#1E293B] rounded-2xl p-5 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-white/10">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm md:text-base">
                 {error}
               </div>
             )}
 
-            {/* Type de compte */}
-            <div className="flex bg-slate-800/50 p-1 rounded-lg mb-4">
-                <button
-                    type="button"
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${formData.userType === 'student' ? 'bg-primary text-white shadow' : 'text-slate-400 hover:text-white'}`}
-                    onClick={() => setFormData({...formData, userType: 'student'})}
-                >
-                    Étudiant
-                </button>
-                <button
-                    type="button"
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${formData.userType === 'company' ? 'bg-pink-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-                    onClick={() => setFormData({...formData, userType: 'company'})}
-                >
-                    Entreprise
-                </button>
+            {/* User Type Toggle */}
+            <div className="flex bg-white/5 p-1 rounded-xl mb-2">
+              <button
+                type="button"
+                className={`flex-1 py-2.5 md:py-3 text-sm md:text-base font-medium rounded-lg transition-all ${
+                  formData.userType === 'student' 
+                    ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                onClick={() => setFormData({...formData, userType: 'student'})}
+              >
+                Étudiant
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-2.5 md:py-3 text-sm md:text-base font-medium rounded-lg transition-all ${
+                  formData.userType === 'company' 
+                    ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                onClick={() => setFormData({...formData, userType: 'company'})}
+              >
+                Entreprise
+              </button>
             </div>
 
             <div>
@@ -83,7 +94,7 @@ const RegisterScreen: React.FC = () => {
                 type="text"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
+                className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
                 placeholder="Nom d'utilisateur"
                 required
               />
@@ -95,48 +106,48 @@ const RegisterScreen: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
+                className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
                 placeholder="Email professionnel"
                 required
               />
             </div>
 
             <div className="flex gap-2">
-                <input
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
-                    placeholder="Mot de passe"
-                    required
-                />
-                <input
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-colors"
-                    placeholder="Confirmer"
-                    required
-                />
+              <input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                placeholder="Mot de passe"
+                required
+              />
+              <input
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-4 py-3 md:px-5 md:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                placeholder="Confirmer"
+                required
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 mt-4 text-white ${formData.userType === 'company' ? 'bg-pink-500 hover:bg-pink-600' : 'bg-primary hover:bg-primary-dark'}`}
+              className="w-full bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold py-3.5 md:py-4 px-4 rounded-xl transition-all shadow-lg shadow-pink-500/30 disabled:opacity-50 active:scale-[0.98] text-sm md:text-base"
             >
               {loading ? 'Création...' : "S'inscrire"}
             </button>
 
-            <div className="mt-4 text-center">
+            <div className="text-center pt-2">
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="text-sm text-slate-400 hover:text-white transition-colors"
+                className="text-sm md:text-base text-slate-400 hover:text-white transition-colors"
               >
-                Déjà un compte ? Se connecter
+                Déjà un compte ? <span className="text-pink-400">Se connecter</span>
               </button>
             </div>
           </form>

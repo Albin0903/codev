@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 
 from .models import Student, Company, CompanySwipe, Match, InternshipOffer, Interview
-from .serializers import CompanySerializer, StudentSerializer, InternshipOfferSerializer, InterviewSerializer
+from .serializers import CompanySerializer, StudentSerializer, InternshipOfferSerializer, InterviewSerializer, CompanySwipeSerializer
 from .api_views import create_interview_for_match  # Import de la fonction utilitaire
 from .permissions import IsCompany, CanOnlyModifyOwnData
 
@@ -45,6 +45,7 @@ class CompanySwipeViewSet(viewsets.ModelViewSet):
     API endpoint pour gérer les swipes des ENTREPRISES sur les étudiants.
     Une entreprise ne peut créer que SES propres swipes.
     """
+    serializer_class = CompanySwipeSerializer
     permission_classes = [IsAuthenticated, IsCompany, CanOnlyModifyOwnData]
     
     def get_queryset(self):
@@ -130,10 +131,10 @@ class CompanySwipeViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 
-class CompanyOfferViewSet(viewsets.ReadOnlyModelViewSet):
-    """Liste des offres de l'entreprise connectée"""
+class CompanyOfferViewSet(viewsets.ModelViewSet):
+    """CRUD des offres de l'entreprise connectée"""
     serializer_class = InternshipOfferSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCompany]
     pagination_class = None  # Désactiver la pagination
 
     def get_queryset(self):
@@ -141,6 +142,66 @@ class CompanyOfferViewSet(viewsets.ReadOnlyModelViewSet):
             return InternshipOffer.objects.filter(company=self.request.user.company)
         except Company.DoesNotExist:
             return InternshipOffer.objects.none()
+
+    def create(self, request):
+        """Créer une nouvelle offre de stage pour l'entreprise connectée"""
+        try:
+            company = request.user.company
+        except Company.DoesNotExist:
+            return Response(
+                {'error': 'Company profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(company=company)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        """Mettre à jour une offre de stage (seulement si elle appartient à l'entreprise)"""
+        instance = self.get_object()
+        try:
+            if instance.company != request.user.company:
+                return Response(
+                    {'error': 'Vous ne pouvez modifier que vos propres offres'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except Company.DoesNotExist:
+            return Response(
+                {'error': 'Company profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Mise à jour partielle (PATCH)"""
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """Supprimer une offre de stage (seulement si elle appartient à l'entreprise)"""
+        instance = self.get_object()
+        try:
+            if instance.company != request.user.company:
+                return Response(
+                    {'error': 'Vous ne pouvez supprimer que vos propres offres'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except Company.DoesNotExist:
+            return Response(
+                {'error': 'Company profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'PATCH'])

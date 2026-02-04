@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Student, Skill, Company, Swipe, Match, Interview, InternshipOffer
+from .models import Student, Skill, Company, Swipe, Match, Interview, InternshipOffer, CompanySwipe
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -106,6 +106,16 @@ class SwipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Swipe
         fields = ['id', 'company', 'company_id', 'direction', 'created_at']
+        read_only_fields = ['created_at']
+
+
+class CompanySwipeSerializer(serializers.ModelSerializer):
+    student = StudentSerializer(read_only=True)
+    student_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = CompanySwipe
+        fields = ['id', 'student', 'student_id', 'direction', 'created_at']
         read_only_fields = ['created_at']
 
 

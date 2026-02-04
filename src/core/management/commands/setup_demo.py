@@ -4,8 +4,8 @@ Usage: docker compose exec web python manage.py setup_demo
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from core.models import Student, Company, Skill, Match, Interview, Swipe, InternshipOffer
-from datetime import datetime, timedelta
+from core.models import Student, Company, Skill, Match, Interview, Swipe, InternshipOffer, Forum
+from datetime import datetime, timedelta, date, time
 from django.utils import timezone
 
 
@@ -335,6 +335,26 @@ class Command(BaseCommand):
                 }
             )
         self.stdout.write(self.style.SUCCESS(f'  ✓ {len(offers_data)} offres créées'))
+
+        # 5. Créer le Forum
+        self.stdout.write('📅 Création du forum...')
+        forum_date = date.today() + timedelta(days=7)  # Forum dans 7 jours
+        forum, forum_created = Forum.objects.get_or_create(
+            name='Forum Entreprises Polytech Lyon 2026',
+            defaults={
+                'date': forum_date,
+                'start_time': time(9, 0),
+                'end_time': time(17, 0),
+                'location': 'Polytech Lyon - Campus LyonTech La Doua',
+                'address': '15 Boulevard André Latarjet, 69100 Villeurbanne',
+                'description': 'Forum annuel de recrutement réunissant les entreprises et étudiants de Polytech Lyon. Rencontrez plus de 50 entreprises et trouvez votre stage ou alternance !',
+                'is_active': True,
+            }
+        )
+        if forum_created:
+            self.stdout.write(self.style.SUCCESS(f'  ✓ Forum créé: {forum.name} le {forum.date}'))
+        else:
+            self.stdout.write(f'  ℹ Forum existant: {forum.name}')
 
         # Résumé
         self.stdout.write('\n' + '='*50)

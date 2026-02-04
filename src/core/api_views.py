@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 import random
 
-from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill
+from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill, Forum
 from .serializers import (
     StudentSerializer, CompanySerializer, SwipeSerializer, 
     MatchSerializer, InterviewSerializer, UserSerializer, RegisterSerializer
@@ -639,4 +639,24 @@ def finalize_priorities_and_plan(request):
     plan_student_interviews(student)
     
     return Response({"message": "Planning généré avec succès au milieu de journée !"})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_forum(request):
+    """Récupère les informations du forum actif."""
+    forum = Forum.objects.filter(is_active=True).first()
+    if not forum:
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
+    
+    return Response({
+        'id': forum.id,
+        'name': forum.name,
+        'date': forum.date.isoformat(),
+        'start_time': forum.start_time.strftime('%H:%M'),
+        'end_time': forum.end_time.strftime('%H:%M'),
+        'location': forum.location,
+        'address': forum.address,
+        'description': forum.description,
+    })
 

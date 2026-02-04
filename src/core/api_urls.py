@@ -24,6 +24,8 @@ urlpatterns = [
     path('me/finalize-plan/', api_views.finalize_priorities_and_plan, name='finalize-plan'),
     path('cv/', api_views.upload_cv, name='upload-cv'),
     path('photo/', api_views.upload_photo, name='upload-photo'),
+    # Forum
+    path('forum/', api_views.get_forum, name='get-forum'),
     # Routes entreprises
     path('company/me/', api_views_company.current_company, name='current-company'),
     path('company/logo/', api_views_company.upload_company_logo, name='company-logo'),

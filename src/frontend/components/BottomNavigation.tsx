@@ -20,7 +20,7 @@ export const BottomNavigation: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-[20rem] bottom-nav">
-      <div className="bg-[#182334]/80 backdrop-blur-3xl rounded-full flex justify-between items-center px-6 py-3 shadow-glass border border-white/10 ring-1 ring-white/5 relative z-50">
+      <div className="bg-[#182334]/50 backdrop-blur-3xl rounded-full flex justify-between items-center px-6 py-3 shadow-glass border border-white/10 ring-1 ring-white/5 relative z-50">
         {navItems.map((item) => (
           <NavLink
             key={item.path}

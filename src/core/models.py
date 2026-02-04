@@ -216,3 +216,25 @@ class Interview(models.Model):
     @property
     def student(self):
         return self.match.student
+
+
+class Forum(models.Model):
+    """Modèle représentant un forum de recrutement"""
+    name = models.CharField(max_length=200, verbose_name="Nom du forum")
+    date = models.DateField(verbose_name="Date du forum")
+    start_time = models.TimeField(verbose_name="Heure de début", default="09:00")
+    end_time = models.TimeField(verbose_name="Heure de fin", default="17:00")
+    location = models.CharField(max_length=255, verbose_name="Lieu")
+    address = models.TextField(blank=True, verbose_name="Adresse complète")
+    description = models.TextField(blank=True, verbose_name="Description")
+    is_active = models.BooleanField(default=True, verbose_name="Forum actif")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Forum"
+        verbose_name_plural = "Forums"
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.name} - {self.date}"
