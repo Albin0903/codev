@@ -144,6 +144,10 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Configuration CORS
+CORS_ALLOW_ALL_ORIGINS = True  # Permet toutes les origines pour le développement
+# Vous pouvez restreindre cela en production avec CORS_ORIGIN_WHITELIST
+
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

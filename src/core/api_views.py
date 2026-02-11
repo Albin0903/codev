@@ -23,7 +23,8 @@ from .serializers import (
     MatchSerializer, InterviewSerializer, UserSerializer, RegisterSerializer
 )
 from .permissions import IsStudent, IsCompany, CanOnlyModifyOwnData
-
+from core.models import InternshipOffer, Swipe, CompanySwipe  # Ajout des imports manquants
+from core.services import create_scoring_matrix, perform_matching  # Ajout des imports manquants
 
 def create_interview_for_match(match):
     """Créer automatiquement un entretien pour un match mutuel.
@@ -367,38 +368,46 @@ def current_user(request):
 @permission_classes([AllowAny])
 @csrf_exempt
 def login_view(request):
-    """Endpoint de connexion - accepte email ou username (prenom.nom)"""
+    """
+    Endpoint de connexion - accepte email ou username (prenom.nom)
+    """
+    print("[LOGIN] Début de la fonction login_view")
+    print("[LOGIN] Requête reçue avec les données :", request.data)
     identifier = request.data.get('username')  # Can be email or username
     password = request.data.get('password')
-    
+
     if not identifier or not password:
+        print("[LOGIN] Identifiant ou mot de passe manquant")
         return Response(
             {'error': 'Identifiant et mot de passe requis'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     # Try to find user by email first, then by username
     user = None
     if '@' in identifier:
-        # Looks like an email
+        print(f"[LOGIN] Tentative de connexion avec email : {identifier}")
         try:
             user_obj = User.objects.get(email__iexact=identifier)
             user = authenticate(request, username=user_obj.username, password=password)
+            print(f"[LOGIN] Utilisateur trouvé avec email : {user_obj.username}")
         except User.DoesNotExist:
-            pass
+            print(f"[LOGIN] Aucun utilisateur trouvé avec l'email : {identifier}")
     else:
-        # Try as username (prenom.nom)
+        print(f"[LOGIN] Tentative de connexion avec username : {identifier}")
         user = authenticate(request, username=identifier, password=password)
-    
+
     if user is not None:
+        print(f"[LOGIN] Utilisateur authentifié : {user.username}")
         login(request, user)
         # create or get token
         token, _ = Token.objects.get_or_create(user=user)
-        
+        print(f"[LOGIN] Token généré : {token.key}")
+
         # Détecter le type d'utilisateur
         user_type = None
         profile_data = {}
-        
+
         # Vérifier si c'est une entreprise
         try:
             company = user.company
@@ -406,9 +415,10 @@ def login_view(request):
             serializer = CompanySerializer(company, context={'request': request})
             profile_data = serializer.data
             user_type = 'company'
+            print(f"[LOGIN] Utilisateur identifié comme entreprise : {company.name}")
         except Company.DoesNotExist:
-            pass
-        
+            print("[LOGIN] Utilisateur non identifié comme entreprise")
+
         # Sinon, c'est un étudiant (ou on en crée un)
         if user_type is None:
             student, created = Student.objects.get_or_create(
@@ -423,14 +433,17 @@ def login_view(request):
             serializer = StudentSerializer(student, context={'request': request})
             profile_data = serializer.data
             user_type = 'student'
-        
+            print(f"[LOGIN] Utilisateur identifié comme étudiant : {student.user.username}")
+
         # Retourner les infos avec le type d'utilisateur
         response_data = profile_data
         response_data['token'] = token.key
         response_data['user_type'] = user_type  # 'student' ou 'company'
-        
+
+        print(f"[LOGIN] Réponse envoyée : {response_data}")
         return Response(response_data)
     else:
+        print("[LOGIN] Échec de l'authentification : identifiants invalides")
         return Response(
             {'error': 'Identifiants invalides'},
             status=status.HTTP_401_UNAUTHORIZED
@@ -672,4 +685,40 @@ def get_forum(request):
         'address': forum.address,
         'description': forum.description,
     })
+
+
+@api_view(['GET'])
+def prioritized_offers(request):
+    """
+    Retourne les offres d'emploi triées par priorité pour l'étudiant connecté.
+    """
+    # Le frontend appelle cet endpoint sans forcément gérer l'auth.
+    if not request.user.is_authenticated:
+        return Response([])
+
+    try:
+        student = request.user.student  # Étudiant connecté
+    except Student.DoesNotExist:
+        return Response([])
+
+    companies = Company.objects.all()
+
+    student_likes = set(
+        Swipe.objects.filter(student=student, direction='right').values_list('company_id', flat=True)
+    )
+    company_likes = set(
+        CompanySwipe.objects.filter(student=student, direction='right').values_list('company_id', flat=True)
+    )
+
+    ranked = []
+    for company in companies:
+        score = 0
+        if company.id in student_likes:
+            score += 1
+        if company.id in company_likes:
+            score += 2
+        ranked.append({"id": company.id, "name": company.name, "score": score})
+
+    ranked.sort(key=lambda x: x["score"], reverse=True)
+    return Response(ranked)
 

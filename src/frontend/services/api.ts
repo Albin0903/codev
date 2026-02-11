@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // API Configuration
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -601,6 +603,11 @@ export const api = {
   getUserType,
   setUserType,
   clearAuth,
+};
+
+export const getPrioritizedOffers = async () => {
+    const response = await axios.get('/api/prioritized_offers/');
+    return response.data;
 };
 
 export default api;

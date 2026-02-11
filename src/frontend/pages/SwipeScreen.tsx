@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
+import { getPrioritizedOffers } from '../services/api';
 
 interface JobCard {
   id: number;
@@ -142,6 +143,16 @@ const SwipeScreen: React.FC = () => {
         return 'translate-x-0 rotate-0 opacity-100';
     }
   };
+
+  const [offers, setOffers] = useState<JobCard[]>([]);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      const data = await getPrioritizedOffers();
+      setOffers(data);
+    };
+    fetchOffers();
+  }, []);
 
   if (loading && !currentCard) {
     return (
