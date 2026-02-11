@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Réinitialiser les matchs & interactions</h1>
+    
+    <div class="module" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 20px; margin: 20px 0;">
+        <h2 style="color: #856404; margin-top: 0;">⚠️ Attention</h2>
+        <p style="color: #856404; margin-bottom: 0;">
+            Cette action va <strong>supprimer</strong> uniquement :
+            <br>• Les swipes (étudiants et entreprises)
+            <br>• Les matchs
+            <br>• Les entretiens
+            <br>• Les scores IA pré-calculés
+            <br><br>
+            Les <strong>profils étudiants, entreprises et offres seront conservés</strong>.
+            <br><br>
+            <strong>Cette action est irréversible !</strong>
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin: 20px 0;">
+            <button type="submit" class="button default" style="background-color: #f59e0b; border-color: #f59e0b;">
+                🔄 Réinitialiser les matchs
+            </button>
+            <a href="{% url 'admin:index' %}" class="button" style="margin-left: 10px;">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

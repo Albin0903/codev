@@ -59,6 +59,7 @@ npm run dev
 | **Backend** | Django 5.2, Django REST Framework |
 | **Database** | PostgreSQL 15 (Docker) |
 | **Auth** | Token Authentication (sessionStorage) |
+| **IA Matching** | SentenceTransformers, Scikit-learn, NumPy |
 
 ---
 
@@ -86,6 +87,8 @@ codev/
     │   ├── api_views_company.py# Vues API entreprises
     │   ├── api_urls.py         # Routes API
     │   ├── admin.py            # Interface admin personnalisée
+    │   ├── matching.py         # Algorithme de scoring multi-critères
+    │   ├── semantic_engine.py  # Moteur IA sémantique (SentenceTransformers)
     │   └── management/commands/
     │       ├── setup_demo.py   # Génère données de démo
     │       └── reset_db.py     # Reset base de données
@@ -133,6 +136,9 @@ codev/
 - **Interview** : Entretien planifié suite à un match
 - **InternshipOffer** : Offres de stage d'une entreprise
 
+### Matching IA
+- **MatchScore** : Score pré-calculé entre un étudiant et une offre (0-100). Évite de recalculer l'IA sémantique à chaque swipe.
+
 ### Relations
 ```
 Student ←──── Swipe ────→ Company
@@ -142,6 +148,9 @@ Student ←──── Swipe ────→ Company
           Match (si mutuel)
             ↓
         Interview
+
+Student ←── MatchScore ──→ InternshipOffer ──→ Company
+           (score IA pré-calculé)
 ```
 
 ---
@@ -177,6 +186,12 @@ Student ←──── Swipe ────→ Company
 | `GET` | `/api/company/interviews/` | Entretiens planifiés |
 | `GET/POST/PATCH/DELETE` | `/api/company/offers/` | CRUD offres de stage |
 
+### Administration
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/api/reset-matches/` | Reset swipes, matchs, scores (admin) |
+| `POST` | `/api/compute-scores/` | Pré-calculer tous les scores IA (admin) |
+
 ---
 
 ## ✅ Fonctionnalités Implémentées
@@ -208,6 +223,19 @@ Student ←──── Swipe ────→ Company
 - [x] Animations de swipe (gauche/droite)
 - [x] Modal "Voir plus" pour détails complets
 - [x] État vide élégant quand plus de profils
+- [x] Tri par pertinence IA (scores pré-calculés)
+
+### 🧠 Matching IA
+- [x] Moteur sémantique (SentenceTransformers) pour comparer profils et offres
+- [x] Scoring multi-critères (5 axes pondérés) :
+  - Similarité sémantique IA (40%)
+  - Correspondance directe des compétences (25%)
+  - Pertinence de l'expérience (10%)
+  - Localisation géographique (15%)
+  - Niveau d'études (10%)
+- [x] Pré-calcul des scores (modèle `MatchScore`)
+- [x] Page admin avec barre de progression temps réel
+- [x] Requêtes agrégées optimisées (pas de N+1)
 
 ### 💝 Matching Bidirectionnel
 - [x] Match créé uniquement si les deux parties ont liké
@@ -225,6 +253,9 @@ Student ←──── Swipe ────→ Company
 ### ⚙️ Administration
 - [x] Interface admin Django personnalisée
 - [x] Bouton reset base de données
+- [x] Bouton reset matchs/swipes uniquement
+- [x] Calcul des scores IA avec barre de progression
+- [x] Vue admin `MatchScore` avec barre de score visuelle
 - [x] Commande `setup_demo` pour données de test
 
 ---
@@ -300,6 +331,13 @@ docker compose exec web python manage.py createsuperuser  # Créer admin
 docker compose exec web python manage.py shell            # Shell Python
 ```
 
+### Matching IA
+```bash
+# Depuis l'admin Django > "Calculer les Scores IA"
+# Ou via l'API :
+curl -X POST http://localhost:8000/api/compute-scores/ -H "Authorization: Token <admin_token>"
+```
+
 ### Frontend
 ```bash
 cd src/frontend
@@ -320,29 +358,6 @@ npm run build         # Build production
 | **Police** | Plus Jakarta Sans |
 | **Icônes** | Material Symbols Outlined |
 | **Format** | Mobile-first, responsive (md: breakpoints) |
-
----
-
-## 🔮 Prochaines Étapes (TODO)
-
-### Priorité Haute
-- [ ] Notifications push pour nouveaux matchs
-- [ ] Chat/messagerie entre matchs
-- [ ] Planification d'entretiens depuis l'app
-- [ ] JWT avec expiration (remplacer tokens permanents)
-- [ ] Audit logging (enregistrer les actions)
-
-### Priorité Moyenne
-- [ ] Filtres de recherche (compétences, secteur)
-- [ ] Algorithme de recommandation
-- [ ] Statistiques pour les entreprises
-- [ ] Rate limiting (protection contre les abus)
-- [ ] Tests de sécurité automatisés
-
-### Priorité Basse
-- [ ] Mode sombre/clair
-- [ ] PWA (installation mobile)
-- [ ] Export des données (CSV)
 
 ---
 

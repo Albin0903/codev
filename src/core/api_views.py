@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -116,20 +116,50 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def next_card(self, request):
-        """Retourne la prochaine entreprise à swiper"""
+        """Retourne la prochaine entreprise à swiper, triée par pertinence (scores pré-calculés)"""
         try:
             student = request.user.student
             # Récupérer les entreprises non encore swipées
             swiped_companies = Swipe.objects.filter(student=student).values_list('company_id', flat=True)
-            company = Company.objects.exclude(id__in=swiped_companies).first()
             
-            if company:
-                serializer = self.get_serializer(company, context={'request': request})
-                return Response(serializer.data)
-            else:
-                return Response({'detail': 'No more companies'}, status=status.HTTP_204_NO_CONTENT)
+            # --- QUERY UNIQUE : meilleur score par entreprise via MatchScore ---
+            from django.db.models import Max
+            from .models import MatchScore
+            
+            # Récupérer le meilleur score par entreprise, trié décroissant
+            best_scores = (
+                MatchScore.objects
+                .filter(student=student, offer__company__isnull=False)
+                .exclude(offer__company_id__in=swiped_companies)
+                .values('offer__company_id')
+                .annotate(best_score=Max('score'))
+                .order_by('-best_score')
+            )
+            
+            if best_scores:
+                top = best_scores[0]
+                best_company = Company.objects.get(id=top['offer__company_id'])
+                best_score = top['best_score']
+                serializer = self.get_serializer(best_company, context={'request': request})
+                data = serializer.data
+                data['match_score'] = best_score
+                return Response(data)
+            
+            # Fallback: entreprises sans scores pré-calculés
+            candidate_companies = Company.objects.exclude(id__in=swiped_companies).first()
+            if candidate_companies:
+                serializer = self.get_serializer(candidate_companies, context={'request': request})
+                data = serializer.data
+                data['match_score'] = 0
+                return Response(data)
+            
+            return Response({'detail': 'No more companies'}, status=status.HTTP_204_NO_CONTENT)
         except Student.DoesNotExist:
             return Response({'error': 'Student profile not found'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': f"Internal Server Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SwipeViewSet(viewsets.ModelViewSet):
@@ -652,6 +682,42 @@ def finalize_priorities_and_plan(request):
     plan_student_interviews(student)
     
     return Response({"message": "Planning généré avec succès au milieu de journée !"})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def reset_matches(request):
+    """
+    Réinitialise uniquement les interactions (Swipes, Matches, Interviews, Scores).
+    Garde les utilisateurs, étudiants, entreprises et offres.
+    """
+    try:
+        from .models import MatchScore
+        CompanySwipe.objects.all().delete()
+        Swipe.objects.all().delete()
+        Match.objects.all().delete()
+        Interview.objects.all().delete()
+        MatchScore.objects.all().delete()
+        return Response({'message': 'Tous les matchs, interactions et scores ont été supprimés.'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def compute_scores(request):
+    """
+    Pré-calcule tous les scores de matching (étudiant × offre).
+    Endpoint admin-only, à appeler après import de données ou reset.
+    """
+    try:
+        from .matching import compute_all_scores
+        total = compute_all_scores()
+        return Response({'message': f'{total} scores calculés avec succès.', 'count': total})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

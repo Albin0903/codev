@@ -24,18 +24,43 @@ class CompanyStudentViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'])
     def next_card(self, request):
-        """Retourne le prochain étudiant à swiper pour l'entreprise"""
+        """Retourne le prochain étudiant à swiper, trié par pertinence (scores pré-calculés)"""
         try:
             company = request.user.company
             # Récupérer les étudiants non encore swipés par cette entreprise
             swiped_students = CompanySwipe.objects.filter(company=company).values_list('student_id', flat=True)
-            student = Student.objects.exclude(id__in=swiped_students).select_related('user').first()
             
-            if student:
-                serializer = self.get_serializer(student, context={'request': request})
-                return Response(serializer.data)
-            else:
-                return Response({'detail': 'No more students'}, status=status.HTTP_204_NO_CONTENT)
+            # --- QUERY UNIQUE : meilleur score par étudiant via MatchScore ---
+            from django.db.models import Max
+            from .models import MatchScore
+            
+            best_scores = (
+                MatchScore.objects
+                .filter(offer__company=company)
+                .exclude(student_id__in=swiped_students)
+                .values('student_id')
+                .annotate(best_score=Max('score'))
+                .order_by('-best_score')
+            )
+            
+            if best_scores:
+                top = best_scores[0]
+                best_student = Student.objects.select_related('user').get(id=top['student_id'])
+                best_score = top['best_score']
+                serializer = self.get_serializer(best_student, context={'request': request})
+                data = serializer.data
+                data['match_score'] = best_score
+                return Response(data)
+            
+            # Fallback: étudiants sans scores pré-calculés
+            fallback = Student.objects.exclude(id__in=swiped_students).select_related('user').first()
+            if fallback:
+                serializer = self.get_serializer(fallback, context={'request': request})
+                data = serializer.data
+                data['match_score'] = 0
+                return Response(data)
+            
+            return Response({'detail': 'No more students'}, status=status.HTTP_204_NO_CONTENT)
         except Company.DoesNotExist:
             return Response({'error': 'Company profile not found'}, status=status.HTTP_400_BAD_REQUEST)
 

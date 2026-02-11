@@ -15,7 +15,7 @@ from django.utils.crypto import get_random_string
 from io import StringIO
 import pandas as pd
 
-from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer
+from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer, MatchScore
 
 
 class StudentForm(forms.ModelForm):
@@ -285,6 +285,47 @@ class CompanyAdmin(admin.ModelAdmin):
         }
         return render(request, "admin/import_excel.html", context)
     
+@admin.register(MatchScore)
+class MatchScoreAdmin(admin.ModelAdmin):
+    list_display = ['student_name', 'offer_title', 'company_name', 'score_bar', 'score', 'computed_at']
+    list_filter = ['offer__company', 'computed_at']
+    search_fields = ['student__user__username', 'student__user__first_name', 'student__user__last_name',
+                     'offer__title', 'offer__company__name']
+    ordering = ['-score']
+    list_per_page = 50
+    readonly_fields = ['student', 'offer', 'score', 'computed_at']
+
+    def student_name(self, obj):
+        return obj.student.user.get_full_name() or obj.student.user.username
+    student_name.short_description = 'Étudiant'
+    student_name.admin_order_field = 'student__user__last_name'
+
+    def offer_title(self, obj):
+        return obj.offer.title
+    offer_title.short_description = 'Offre'
+    offer_title.admin_order_field = 'offer__title'
+
+    def company_name(self, obj):
+        return obj.offer.company.name
+    company_name.short_description = 'Entreprise'
+    company_name.admin_order_field = 'offer__company__name'
+
+    def score_bar(self, obj):
+        if obj.score >= 70:
+            color = '#22c55e'
+        elif obj.score >= 40:
+            color = '#f59e0b'
+        else:
+            color = '#ef4444'
+        return format_html(
+            '<div style="width:100px;background:#334155;border-radius:6px;overflow:hidden;">'
+            '<div style="width:{}%;background:{};height:14px;border-radius:6px;transition:width 0.3s;"></div>'
+            '</div>',
+            obj.score, color
+        )
+    score_bar.short_description = 'Score'
+
+
 @admin.register(Swipe)
 class SwipeAdmin(admin.ModelAdmin):
     list_display = ['student', 'company', 'direction', 'created_at']
@@ -345,7 +386,7 @@ class InternshipOfferAdmin(admin.ModelAdmin):
     raw_id_fields = ('company',)
 
 
-# Site admin personnalisé avec option de reset
+# Site admin personnalisé avec options de reset et calcul de scores
 class CustomAdminSite(admin.AdminSite):
     site_header = "JobFair Admin"
     site_title = "JobFair"
@@ -355,15 +396,17 @@ class CustomAdminSite(admin.AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('reset-db/', self.admin_view(self.reset_db_view), name='reset-db'),
+            path('reset-matches/', self.admin_view(self.reset_matches_view), name='reset-matches'),
+            path('compute-scores/', self.admin_view(self.compute_scores_view), name='compute-scores'),
+            path('compute-scores/progress/', self.admin_view(self.compute_scores_progress), name='compute-scores-progress'),
         ]
         return custom_urls + urls
     
     def reset_db_view(self, request):
-        """Vue pour réinitialiser la base de données"""
+        """Vue pour réinitialiser la base de données complète + réinstaller la démo"""
         from django.contrib import messages
         if request.method == 'POST':
             try:
-                # Réinitialisation complète: reset_db -> migrate -> flush -> nettoyer médias -> setup_demo
                 output = StringIO()
                 call_command('reset_db', '--force', stdout=output)
                 call_command('migrate', stdout=output)
@@ -391,13 +434,84 @@ class CustomAdminSite(admin.AdminSite):
                 messages.error(request, f'❌ Erreur: {str(e)}')
                 return HttpResponseRedirect('/admin/')
         
-        # Afficher un formulaire de confirmation
         context = {
             'title': 'Réinitialiser la base de données',
             'opts': None,
             'has_view_permission': True,
         }
         return TemplateResponse(request, 'admin/reset_db.html', context)
+
+    def reset_matches_view(self, request):
+        """Vue pour réinitialiser uniquement les matchs, swipes, entretiens et scores"""
+        from django.contrib import messages
+        from .models import MatchScore
+        if request.method == 'POST':
+            try:
+                CompanySwipe.objects.all().delete()
+                Swipe.objects.all().delete()
+                Match.objects.all().delete()
+                Interview.objects.all().delete()
+                MatchScore.objects.all().delete()
+                messages.success(request, '✅ Tous les matchs, swipes, entretiens et scores ont été supprimés. Les profils sont conservés.')
+                return HttpResponseRedirect('/admin/')
+            except Exception as e:
+                messages.error(request, f'❌ Erreur: {str(e)}')
+                return HttpResponseRedirect('/admin/')
+        
+        context = {
+            'title': 'Réinitialiser les matchs',
+            'opts': None,
+            'has_view_permission': True,
+        }
+        return TemplateResponse(request, 'admin/reset_matches.html', context)
+
+    def compute_scores_view(self, request):
+        """Vue pour pré-calculer tous les scores de matching (avec progression)"""
+        from django.http import JsonResponse
+        from django.core.cache import cache
+        
+        if request.method == 'POST':
+            # Lancer le calcul dans un thread séparé
+            import threading
+            
+            cache.set('compute_scores_progress', {
+                'done': 0, 'total': 0, 'status': 'starting',
+                'current_student': '', 'current_offer': ''
+            }, timeout=3600)
+            
+            def run_compute():
+                try:
+                    from .matching import compute_all_scores
+                    compute_all_scores()
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    cache.set('compute_scores_progress', {
+                        'done': 0, 'total': 0, 'status': 'error', 'error': str(e)
+                    }, timeout=3600)
+                finally:
+                    from django.db import connection
+                    connection.close()
+            
+            thread = threading.Thread(target=run_compute, daemon=True)
+            thread.start()
+            return JsonResponse({'status': 'started'})
+        
+        context = {
+            'title': 'Calculer les scores IA',
+            'opts': None,
+            'has_view_permission': True,
+        }
+        return TemplateResponse(request, 'admin/compute_scores.html', context)
+
+    def compute_scores_progress(self, request):
+        """Endpoint pour récupérer la progression du calcul de scores"""
+        from django.http import JsonResponse
+        from django.core.cache import cache
+        progress = cache.get('compute_scores_progress', {
+            'done': 0, 'total': 0, 'status': 'idle'
+        })
+        return JsonResponse(progress)
 
 # Utiliser le site admin personnalisé
 admin.site.__class__ = CustomAdminSite

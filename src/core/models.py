@@ -97,6 +97,27 @@ class InternshipOffer(models.Model):
         return f"{self.title} - {self.company.name}"
 
 
+class MatchScore(models.Model):
+    """Score de matching pré-calculé entre un étudiant et une offre.
+    
+    Évite de recalculer l'IA sémantique à chaque swipe.
+    Les scores sont recalculés via l'endpoint admin /api/compute-scores/.
+    """
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='match_scores')
+    offer = models.ForeignKey('InternshipOffer', on_delete=models.CASCADE, related_name='match_scores')
+    score = models.IntegerField(default=0, verbose_name="Score (0-100)")
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Score de matching"
+        verbose_name_plural = "Scores de matching"
+        unique_together = ['student', 'offer']
+        ordering = ['-score']
+
+    def __str__(self):
+        return f"{self.student} ↔ {self.offer.title}: {self.score}/100"
+
+
 class Swipe(models.Model):
     """Modèle représentant un swipe (like/dislike) d'un ÉTUDIANT vers une ENTREPRISE"""
     DIRECTION_CHOICES = [

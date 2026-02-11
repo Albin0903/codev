@@ -99,7 +99,7 @@ const SwipeScreen: React.FC = () => {
 
     try {
       const response = await api.createSwipe(currentCard.id, direction);
-      
+
       if (response.match) {
         confetti({
           particleCount: 100,
@@ -108,14 +108,14 @@ const SwipeScreen: React.FC = () => {
           colors: ['#ec4899', '#f472b6', '#db2777'],
           zIndex: 9999
         });
-        
+
         setTimeout(() => {
-          navigate('/match', { 
-            state: { 
+          navigate('/match', {
+            state: {
               matchType: 'student',
               companyName: currentCard.company,
               companyLogo: currentCard.logo
-            } 
+            }
           });
         }, 1500);
       } else {
@@ -168,30 +168,31 @@ const SwipeScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0f172a] overflow-hidden md:pt-24">
-      
+
       {/* Header - Mobile only */}
       <div className="md:hidden">
         <AppHeader />
       </div>
-      
+
       {/* Desktop: Full width layout | Mobile: Stack layout */}
       <div className="flex-1 flex flex-col md:px-8 md:pt-6 md:pb-6 min-h-0 overflow-hidden">
-        
+
         {/* Card Container - takes most space */}
         <div className="flex-1 px-4 md:px-0 pb-2 md:pb-0 min-h-0 overflow-hidden md:max-w-6xl md:mx-auto md:w-full" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-          <div 
+          <div
+            key={currentCard.id}
             className={`h-full transition-all duration-300 ease-out ${getCardAnimationClass()}`}
           >
             {/* Card - scrollable */}
-            <div 
+            <div
               ref={cardScrollRef}
               className="h-full bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-y-auto"
             >
               {/* Company Header */}
               <div className="p-6 flex items-center gap-6 border-b border-white/5 sticky top-0 bg-[#1e293b] md:bg-[#1e293b] z-10">
-                <img 
-                  src={currentCard.logo} 
-                  alt="logo" 
+                <img
+                  src={currentCard.logo}
+                  alt="logo"
                   className="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-contain bg-white p-1.5 border border-white/20 shadow-lg"
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src = '/assets/company-default.svg';
@@ -304,7 +305,7 @@ const SwipeScreen: React.FC = () => {
                 <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">Liens & Contact</h3>
                 <div className="flex flex-wrap gap-4">
                   {currentCard.companyUrl && (
-                    <a 
+                    <a
                       href={currentCard.companyUrl}
                       target="_blank"
                       rel="noreferrer"
@@ -315,18 +316,18 @@ const SwipeScreen: React.FC = () => {
                     </a>
                   )}
                   {currentCard.linkedin_url && (
-                    <a 
+                    <a
                       href={currentCard.linkedin_url}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-2.5 px-6 py-3 md:px-7 md:py-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-2xl text-blue-400 text-sm md:text-base font-semibold transition-all hover:scale-105"
                     >
-                      <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                      <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                       LinkedIn
                     </a>
                   )}
                   {currentCard.contact_email && (
-                    <a 
+                    <a
                       href={`mailto:${currentCard.contact_email}`}
                       className="flex items-center gap-2.5 px-6 py-3 md:px-7 md:py-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-2xl text-emerald-400 text-sm md:text-base font-semibold transition-all hover:scale-105"
                     >
@@ -346,7 +347,7 @@ const SwipeScreen: React.FC = () => {
 
       {/* Action Buttons - always at bottom */}
       <div className="shrink-0 flex justify-center items-center gap-12 px-4 pt-4 pb-28 md:pb-12 bg-[#0f172a]">
-        <button 
+        <button
           onClick={() => handleSwipe('left')}
           disabled={swipeAnimation !== null}
           className="flex items-center justify-center h-16 w-28 md:h-24 md:w-52 rounded-full bg-slate-800/80 backdrop-blur-xl border border-white/10 shadow-xl text-white active:scale-95 transition-all disabled:opacity-50 md:hover:scale-105 md:hover:bg-slate-700 md:hover:border-red-500/30 group"
@@ -354,8 +355,8 @@ const SwipeScreen: React.FC = () => {
         >
           <span className="material-symbols-outlined text-4xl md:text-5xl group-hover:text-red-400 transition-colors">close</span>
         </button>
-        
-        <button 
+
+        <button
           onClick={() => handleSwipe('right')}
           disabled={swipeAnimation !== null}
           className="flex items-center justify-center h-16 w-28 md:h-24 md:w-52 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 shadow-xl shadow-pink-500/30 text-white active:scale-95 transition-all disabled:opacity-50 md:hover:scale-105 md:hover:shadow-pink-500/50 group"
