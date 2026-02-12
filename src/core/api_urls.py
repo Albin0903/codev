@@ -23,6 +23,7 @@ urlpatterns = [
     path('me/', api_views.current_user, name='current-user'),
     path('me/finalize-plan/', api_views.finalize_priorities_and_plan, name='finalize-plan'),
     path('cv/', api_views.upload_cv, name='upload-cv'),
+    path('cv/extract/', api_views.extract_cv_data, name='extract-cv-data'),
     path('photo/', api_views.upload_photo, name='upload-photo'),
     # Forum
     path('forum/', api_views.get_forum, name='get-forum'),

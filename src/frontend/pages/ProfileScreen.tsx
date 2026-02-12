@@ -14,6 +14,7 @@ const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [uploadingCV, setUploadingCV] = useState(false);
+  const [analyzingCV, setAnalyzingCV] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
   const [cvExtractedData, setCvExtractedData] = useState<any>(null);
@@ -96,11 +97,25 @@ const ProfileScreen: React.FC = () => {
   const handleCVUpload = async (file: File) => {
     setUploadingCV(true);
     try {
+      // 1. D'abord on upload/sauvegarde le CV dans la DB
       const updated = await api.uploadCV(file);
       setUserData(updated);
-      if (updated.extracted_from_cv) {
-        setCvExtractedData(updated.extracted_from_cv);
+      setUploadingCV(false); // L'upload est fini
+      
+      // 2. Ensuite on lance l'analyse Gemini (IA)
+      setAnalyzingCV(true);
+      try {
+        const result = await api.extractCVData();
+        if (result.extracted_from_cv) {
+          setCvExtractedData(result.extracted_from_cv);
+          setShowCvImportModal(true);
+        }
+      } catch (extractErr) {
+        console.error("Erreur extraction IA:", extractErr);
+      } finally {
+        setAnalyzingCV(false);
       }
+      
     } catch (err: any) {
       setConfirmModal({
         show: true,
@@ -108,8 +123,8 @@ const ProfileScreen: React.FC = () => {
         message: err.message || 'Erreur lors de l\'upload du CV',
         onConfirm: () => setConfirmModal(null)
       });
-    } finally {
       setUploadingCV(false);
+    } finally {
       if (cvInputRef.current) cvInputRef.current.value = '';
     }
   };
@@ -161,6 +176,42 @@ const ProfileScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0f172a] overflow-y-auto overflow-x-hidden pb-32 md:pt-24">
+      {/* AI Analyzing Indicator */}
+      {analyzingCV && (
+        <div className="fixed bottom-24 left-4 right-4 z-[100] md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md md:bottom-8 animate-slide-up">
+          <div className="relative overflow-hidden rounded-2xl bg-[#0f172a]/90 backdrop-blur-xl border border-pink-500/30 p-4 shadow-[0_10px_40px_-10px_rgba(236,72,153,0.3)] ring-1 ring-white/10">
+            {/* Background Gradient Pulse */}
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5"></div>
+            
+            <div className="relative flex items-center gap-4">
+              <div className="relative shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
+                <span className="material-symbols-outlined text-pink-400 text-2xl animate-spin">
+                  donut_large
+                </span>
+                <span className="absolute inset-0 rounded-full border border-pink-500/30 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-0.5">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-300">
+                    Analyse intelligente
+                  </span>
+                  <span className="material-symbols-outlined text-xs text-purple-400 animate-bounce">auto_awesome</span>
+                </h3>
+                <p className="text-slate-400 text-xs">
+                  Gemini lit votre CV pour compléter votre profil...
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Progress Line */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-800/50">
+               <div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 animate-progress origin-left"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="md:hidden">
         <AppHeader />
       </div>
@@ -515,11 +566,13 @@ const ProfileScreen: React.FC = () => {
               </a>
               <button
                 onClick={() => cvInputRef.current?.click()}
-                disabled={uploadingCV}
+                disabled={uploadingCV || analyzingCV}
                 className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-400 transition-colors"
                 title="Remplacer"
               >
-                <span className="material-symbols-outlined">{uploadingCV ? 'hourglass_empty' : 'upload'}</span>
+                <span className="material-symbols-outlined">
+                  {uploadingCV || analyzingCV ? 'sync' : 'upload'}
+                </span>
               </button>
               <button
                 onClick={() => {
@@ -553,13 +606,18 @@ const ProfileScreen: React.FC = () => {
           ) : (
             <button
               onClick={() => cvInputRef.current?.click()}
-              disabled={uploadingCV}
+              disabled={uploadingCV || analyzingCV}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-pink-500 hover:bg-pink-600 rounded-xl text-white font-semibold transition-colors disabled:opacity-50"
             >
               {uploadingCV ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin">hourglass_empty</span>
+                  <span className="material-symbols-outlined animate-spin text-lg">sync</span>
                   Upload en cours...
+                </>
+              ) : analyzingCV ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-lg">auto_awesome</span>
+                  Analyse IA en cours...
                 </>
               ) : (
                 <>

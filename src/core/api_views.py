@@ -385,6 +385,26 @@ def current_user(request):
             except Exception as e:
                 print(f"[API /me PATCH] Erreur skills: {e}")
 
+        # Recalculer les scores de matchmaking en arrière-plan pour ne pas bloquer l'UI
+        try:
+            import threading
+            from .matching import recompute_student_scores
+            
+            def run_recompute(student_instance):
+                try:
+                    # Le recalcul peut prendre du temps (IA), on le fait hors du cycle requête/réponse
+                    count = recompute_student_scores(student_instance)
+                    print(f"[Background] Scores recalculés pour {count} offres (Student: {student_instance.user.username}).")
+                except Exception as e:
+                    print(f"[Background] Erreur recalcul: {e}")
+
+            # Lancer le thread
+            thread = threading.Thread(target=run_recompute, args=(inst,))
+            thread.start()
+            
+        except Exception as score_err:
+            print(f"[API /me PATCH] Erreur lancement recalcul async: {score_err}")
+
         # re-serialize to include fresh related user and skills data
         return Response(StudentSerializer(inst, context={'request': request}).data)
     print(f"[API /me PATCH] Erreurs serializer: {serializer.errors}")
@@ -521,21 +541,9 @@ def upload_cv(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Parser le CV pour extraire les informations
-    extracted_data = {}
-    try:
-        from .cv_parser import parse_cv
-        extracted_data = parse_cv(cv_file, cv_file.content_type)
-        # Afficher la réponse brute de Gemini dans la console
-        print("[CV Parser] Réponse Gemini:", extracted_data)
-        cv_file.seek(0)  # Reset file pointer après parsing
-    except Exception as e:
-        print(f"Erreur parsing CV: {e}")
-        # Continue même si le parsing échoue
-    
-    # NOTE: On ne fait plus d'application automatique des données extraites
-    # L'utilisateur devra explicitement cliquer sur "Appliquer les modifications"
-    # dans la modal d'import CV pour mettre à jour son profil
+    # NOTE: On ne fait plus l'appel à Gemini ici.
+    # L'upload est immédiat pour mettre à jour la BDD et le front.
+    # L'extraction (IA) se fait via un endpoint séparé pour ne pas bloquer l'upload.
 
     # Supprimer l'ancien CV s'il existe
     if student.cv:
@@ -545,12 +553,35 @@ def upload_cv(request):
     student.cv = cv_file
     student.save()
     
-    # Retourner les infos mises à jour avec les données extraites
+    # Retourner les infos mises à jour
     from .serializers import StudentSerializer
     serializer = StudentSerializer(student, context={'request': request})
-    response_data = serializer.data
-    response_data['extracted_from_cv'] = extracted_data  # Inclure les données extraites pour la modal
-    return Response(response_data, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def extract_cv_data(request):
+    """Analyse le CV déjà uploadé avec Gemini"""
+    try:
+        student = request.user.student
+        if not student.cv:
+            return Response({'error': 'Aucun CV trouvé pour cet étudiant'}, status=status.HTTP_404_NOT_FOUND)
+        
+        from .cv_parser import parse_cv
+        # Ouvrir le fichier pour le parser
+        with student.cv.open('rb') as cv_file:
+            # On passe le nom du fichier ou le content_type
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(student.cv.name)
+            extracted_data = parse_cv(cv_file, content_type or 'application/pdf')
+            
+        print("[CV Parser] Réponse Gemini:", extracted_data)
+        return Response({'extracted_from_cv': extracted_data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST', 'DELETE', 'PATCH'])

@@ -408,9 +408,14 @@ class CustomAdminSite(admin.AdminSite):
         if request.method == 'POST':
             try:
                 output = StringIO()
+                # On utilise reset_db pour nettoyer les interactions
                 call_command('reset_db', '--force', stdout=output)
+                # On s'assure que les migrations sont à jour
                 call_command('migrate', stdout=output)
-                call_command('flush', '--noinput', stdout=output)
+                
+                # Au lieu de 'flush' qui échoue souvent en cours de requête via Docker/Postgres
+                # on laisse setup_demo gérer la remise au propre des données de base
+                # car il utilise get_or_create et écrase les valeurs existantes
 
                 # Nettoyage médias
                 import os, shutil
@@ -428,9 +433,11 @@ class CustomAdminSite(admin.AdminSite):
                 # Setup démo
                 call_command('setup_demo', stdout=output)
                 
-                messages.success(request, '✅ Base et médias entièrement vidés. Démo réinstallée.')
+                messages.success(request, '✅ Base et médias réinitialisés. Démo réinstallée.')
                 return HttpResponseRedirect('/admin/')
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 messages.error(request, f'❌ Erreur: {str(e)}')
                 return HttpResponseRedirect('/admin/')
         
