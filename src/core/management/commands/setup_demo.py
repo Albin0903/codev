@@ -289,36 +289,100 @@ class Command(BaseCommand):
         self.stdout.write('📝 Création des offres de stage...')
         offers_data = [
             {
-                'company_index': 0,
+                'company_index': 0, 
                 'title': 'Stage Développeur Full-Stack React/Django',
-                'description': 'Rejoignez notre équipe pour développer des applications web modernes.',
-                'location': 'Lyon (hybride)',
-                'duration': '6 mois',
-                'requirements': 'Connaissance de React, TypeScript. Python/Django est un plus.',
+                'description': '''Au sein de la feature team "Core Product", vous participerez activement au développement de notre plateforme SaaS.
+
+Missions :
+- Conception et développement de nouvelles fonctionnalités front-end avec React 19 et Tailwind CSS
+- Création d'API REST performantes avec Django REST Framework
+- Participation aux Code Reviews et aux rituels agiles (Daily, Retro, Poker Planning)
+- Écriture de tests unitaires et d'intégration (Jest, Pytest)
+
+Environnement : Équipe de 5 devs, CI/CD GitLab, Docker, AWS.''',
+                'location': 'Lyon 7ème (hybride 2j/semaine)',
+                'duration': '6 mois (pré-embauche possible)',
+                'requirements': 'Étudiant(e) en dernière année d\'école d\'ingénieur. Bonne maîtrise de JS/TS et React. Notions de Python/Django. Sensibilité UX/UI. Curiosité et autonomie.',
             },
             {
                 'company_index': 0,
-                'title': 'Stage DevOps Junior',
-                'description': 'Participez à la mise en place de notre infrastructure cloud.',
-                'location': 'Lyon',
-                'duration': '4-6 mois',
-                'requirements': 'Bases en Linux, intérêt pour le cloud.',
+                'title': 'Stage DevOps Junior / Cloud Infrastructure',
+                'description': '''Intégré(e) à l'équipe SRE, vous aiderez à industrialiser nos déploiements et surveiller notre infrastructure.
+
+Missions :
+- Automatisation des déploiements via Ansible et Terraform
+- Amélioration des pipelines CI/CD sous GitLab CI
+- Mise en place de sondes de monitoring (Prometheus + Grafana)
+- Conteneurisation des microservices existants (Docker, Kubernetes)
+
+Environnement : Linux, AWS (EC2, S3, RDS), K8s, Python, Bash.''',
+                'location': 'Lyon 7ème',
+                'duration': '6 mois',
+                'requirements': 'Passionné(e) par l\'infra-as-code et l\'automatisation. Connaissance de Linux et Docker indispensable. Une première expérience avec un Cloud provider (AWS/GCP) est un plus.',
             },
             {
                 'company_index': 1,
-                'title': 'Stage UX/UI Designer',
-                'description': 'Création de maquettes et prototypes interactifs.',
-                'location': 'Lyon',
+                'title': 'Stage UX/UI Designer - Design System',
+                'description': '''Rejoignez l'équipe Design de Creative Minds pour repenser l'expérience digitale de nos clients grands comptes.
+
+Missions :
+- Création de wireframes et maquettes haute-fidélité sur Figma
+- Participation à la refonte de notre Design System interne
+- Réalisation de tests utilisateurs et analyse des parcours
+- Collaboration étroite avec les développeurs front-end pour l'intégration
+
+Projets : App mobile bancaire, Dashboard e-commerce, Site vitrine de luxe.''',
+                'location': 'Lyon 2ème (Presqu\'île)',
                 'duration': '6 mois',
-                'requirements': 'Maîtrise de Figma, portfolio requis.',
+                'requirements': 'Portfolio créatif obligatoire. Maîtrise avancée de Figma (Auto-layout, Components). Notions de HTML/CSS appréciées pour dialoguer avec les devs.',
+            },
+            {
+                'company_index': 1,
+                'title': 'Stage Développeur Front-End Créatif (Three.js)',
+                'description': '''Pour nos projets "Wwaaaaouh Effect", nous cherchons un développeur passionné par le webGL et les interactions avancées.
+
+Missions :
+- Intégration de maquettes complexes avec soin du détail (pixel perfect)
+- Création d'expériences immersives 3D avec Three.js / R3F
+- Optimisation des performances (Lighthouse, Core Web Vitals)
+- Animations fluides avec GSAP / Framer Motion
+
+Stack : React, Next.js, WebGL, Tailwind.''',
+                'location': 'Lyon 2ème',
+                'duration': '6 mois',
+                'requirements': 'Forte sensibilité créative. Vous aimez quand ça bouge à 60fps. Maîtrise de React et d\'une lib d\'animation.',
             },
             {
                 'company_index': 2,
-                'title': 'Stage Data Analyst',
-                'description': 'Analyse de données et création de dashboards.',
+                'title': 'Stage Data Scientist - NLP & LLM',
+                'description': '''Dans le pôle R&D, vous travaillerez sur l'intégration de modèles de langage (LLM) pour nos outils d'analyse documentaire.
+
+Missions :
+- Fine-tuning de modèles (Llama 3, Mistral) sur des données sectorielles
+- Développement de pipelines RAG (Retrieval Augmented Generation)
+- Analyse de sentiment sur des flux de données massifs
+- Veille technologique active sur l'IA générative
+
+Environnement : Python, PyTorch, Hugging Face, LangChain, Elasticsearch.''',
+                'location': 'Villeurbanne (Doua)',
+                'duration': '6 mois (Stage de fin d\'études)',
+                'requirements': 'Solides bases mathématiques et statistiques. Maîtrise de Python et des bibliothèques ML (Scikit-learn, Pandas, PyTorch). Intérêt marqué pour le NLP.',
+            },
+            {
+                'company_index': 2,
+                'title': 'Stage Data Engineer - Big Data',
+                'description': '''Vous rejoignez l'équipe Data Platform pour construire les pipelines de données de demain.
+
+Missions :
+- Développement de pipelines ETL avec Apache Spark et Airflow
+- Modélisation de Data Warehouses (Snowflake / BigQuery)
+- Optimisation des requêtes SQL complexes
+- Mise en qualité de la donnée (Data Quality)
+
+Stack : Python, Scala, SQL, Spark, Docker, AWS Glue.''',
                 'location': 'Villeurbanne',
                 'duration': '6 mois',
-                'requirements': 'Python, SQL, statistiques.',
+                'requirements': 'Profil technique fort. Maîtrise de SQL et Python. Curiosité pour les architectures distribuées. Rigueur et bonnes pratiques de code.',
             },
         ]
         

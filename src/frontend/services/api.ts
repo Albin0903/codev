@@ -456,6 +456,27 @@ export const api = {
     return response.json();
   },
 
+  // Extraire les données du CV via Gemini
+  async extractCVData() {
+    const token = getToken();
+    const headers: Record<string,string> = {
+      'Content-Type': 'application/json'
+    };
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const response = await fetch(`${API_BASE_URL}/cv/extract/`, {
+      method: 'POST',
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to extract CV data');
+    }
+    return response.json();
+  },
+
   // Supprimer CV
   async deleteCV() {
     const token = getToken();

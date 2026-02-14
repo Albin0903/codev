@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -116,20 +116,50 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def next_card(self, request):
-        """Retourne la prochaine entreprise à swiper"""
+        """Retourne la prochaine entreprise à swiper, triée par pertinence (scores pré-calculés)"""
         try:
             student = request.user.student
             # Récupérer les entreprises non encore swipées
             swiped_companies = Swipe.objects.filter(student=student).values_list('company_id', flat=True)
-            company = Company.objects.exclude(id__in=swiped_companies).first()
             
-            if company:
-                serializer = self.get_serializer(company, context={'request': request})
-                return Response(serializer.data)
-            else:
-                return Response({'detail': 'No more companies'}, status=status.HTTP_204_NO_CONTENT)
+            # --- QUERY UNIQUE : meilleur score par entreprise via MatchScore ---
+            from django.db.models import Max
+            from .models import MatchScore
+            
+            # Récupérer le meilleur score par entreprise, trié décroissant
+            best_scores = (
+                MatchScore.objects
+                .filter(student=student, offer__company__isnull=False)
+                .exclude(offer__company_id__in=swiped_companies)
+                .values('offer__company_id')
+                .annotate(best_score=Max('score'))
+                .order_by('-best_score')
+            )
+            
+            if best_scores:
+                top = best_scores[0]
+                best_company = Company.objects.get(id=top['offer__company_id'])
+                best_score = top['best_score']
+                serializer = self.get_serializer(best_company, context={'request': request})
+                data = serializer.data
+                data['match_score'] = best_score
+                return Response(data)
+            
+            # Fallback: entreprises sans scores pré-calculés
+            candidate_companies = Company.objects.exclude(id__in=swiped_companies).first()
+            if candidate_companies:
+                serializer = self.get_serializer(candidate_companies, context={'request': request})
+                data = serializer.data
+                data['match_score'] = 0
+                return Response(data)
+            
+            return Response({'detail': 'No more companies'}, status=status.HTTP_204_NO_CONTENT)
         except Student.DoesNotExist:
             return Response({'error': 'Student profile not found'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': f"Internal Server Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SwipeViewSet(viewsets.ModelViewSet):
@@ -356,6 +386,26 @@ def current_user(request):
             except Exception as e:
                 print(f"[API /me PATCH] Erreur skills: {e}")
 
+        # Recalculer les scores de matchmaking en arrière-plan pour ne pas bloquer l'UI
+        try:
+            import threading
+            from .matching import recompute_student_scores
+            
+            def run_recompute(student_instance):
+                try:
+                    # Le recalcul peut prendre du temps (IA), on le fait hors du cycle requête/réponse
+                    count = recompute_student_scores(student_instance)
+                    print(f"[Background] Scores recalculés pour {count} offres (Student: {student_instance.user.username}).")
+                except Exception as e:
+                    print(f"[Background] Erreur recalcul: {e}")
+
+            # Lancer le thread
+            thread = threading.Thread(target=run_recompute, args=(inst,))
+            thread.start()
+            
+        except Exception as score_err:
+            print(f"[API /me PATCH] Erreur lancement recalcul async: {score_err}")
+
         # re-serialize to include fresh related user and skills data
         return Response(StudentSerializer(inst, context={'request': request}).data)
     print(f"[API /me PATCH] Erreurs serializer: {serializer.errors}")
@@ -492,21 +542,9 @@ def upload_cv(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Parser le CV pour extraire les informations
-    extracted_data = {}
-    try:
-        from .cv_parser import parse_cv
-        extracted_data = parse_cv(cv_file, cv_file.content_type)
-        # Afficher la réponse brute de Gemini dans la console
-        print("[CV Parser] Réponse Gemini:", extracted_data)
-        cv_file.seek(0)  # Reset file pointer après parsing
-    except Exception as e:
-        print(f"Erreur parsing CV: {e}")
-        # Continue même si le parsing échoue
-    
-    # NOTE: On ne fait plus d'application automatique des données extraites
-    # L'utilisateur devra explicitement cliquer sur "Appliquer les modifications"
-    # dans la modal d'import CV pour mettre à jour son profil
+    # NOTE: On ne fait plus l'appel à Gemini ici.
+    # L'upload est immédiat pour mettre à jour la BDD et le front.
+    # L'extraction (IA) se fait via un endpoint séparé pour ne pas bloquer l'upload.
 
     # Supprimer l'ancien CV s'il existe
     if student.cv:
@@ -516,12 +554,35 @@ def upload_cv(request):
     student.cv = cv_file
     student.save()
     
-    # Retourner les infos mises à jour avec les données extraites
+    # Retourner les infos mises à jour
     from .serializers import StudentSerializer
     serializer = StudentSerializer(student, context={'request': request})
-    response_data = serializer.data
-    response_data['extracted_from_cv'] = extracted_data  # Inclure les données extraites pour la modal
-    return Response(response_data, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def extract_cv_data(request):
+    """Analyse le CV déjà uploadé avec Gemini"""
+    try:
+        student = request.user.student
+        if not student.cv:
+            return Response({'error': 'Aucun CV trouvé pour cet étudiant'}, status=status.HTTP_404_NOT_FOUND)
+        
+        from .cv_parser import parse_cv
+        # Ouvrir le fichier pour le parser
+        with student.cv.open('rb') as cv_file:
+            # On passe le nom du fichier ou le content_type
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(student.cv.name)
+            extracted_data = parse_cv(cv_file, content_type or 'application/pdf')
+            
+        print("[CV Parser] Réponse Gemini:", extracted_data)
+        return Response({'extracted_from_cv': extracted_data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST', 'DELETE', 'PATCH'])
@@ -646,6 +707,42 @@ def reset_database(request):
 def finalize_priorities_and_plan(request):
     run_global_smart_matching()
     return Response({"status": "Planning global optimisé généré"})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def reset_matches(request):
+    """
+    Réinitialise uniquement les interactions (Swipes, Matches, Interviews, Scores).
+    Garde les utilisateurs, étudiants, entreprises et offres.
+    """
+    try:
+        from .models import MatchScore
+        CompanySwipe.objects.all().delete()
+        Swipe.objects.all().delete()
+        Match.objects.all().delete()
+        Interview.objects.all().delete()
+        MatchScore.objects.all().delete()
+        return Response({'message': 'Tous les matchs, interactions et scores ont été supprimés.'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def compute_scores(request):
+    """
+    Pré-calcule tous les scores de matching (étudiant × offre).
+    Endpoint admin-only, à appeler après import de données ou reset.
+    """
+    try:
+        from .matching import compute_all_scores
+        total = compute_all_scores()
+        return Response({'message': f'{total} scores calculés avec succès.', 'count': total})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

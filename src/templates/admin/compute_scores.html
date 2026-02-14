@@ -1,0 +1,177 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div id="content-main">
+    <h1>🧠 Calculer les scores IA</h1>
+
+    <div class="module"
+        style="background-color: #e0e7ff; border: 1px solid #818cf8; border-radius: 4px; padding: 20px; margin: 20px 0;">
+        <h2 style="color: #3730a3; margin-top: 0;">Pré-calcul des scores de matching</h2>
+        <p style="color: #3730a3; margin-bottom: 0;">
+            Cette action va calculer les scores de matching entre <strong>chaque étudiant</strong> et <strong>chaque
+                offre de stage</strong> en utilisant l'IA sémantique.
+            <br><br>
+            Les scores existants seront <strong>mis à jour</strong>.
+        </p>
+    </div>
+
+    <!-- Zone initiale avec bouton -->
+    <div id="start-section">
+        <div style="margin: 20px 0;">
+            <button type="button" id="start-btn" class="button default"
+                style="background-color: #6366f1; border-color: #6366f1; cursor: pointer; font-size: 1rem; padding: 14px 28px;">
+                🧠 Lancer le calcul des scores
+            </button>
+            <a href="/admin/" class="button" style="margin-left: 10px;">
+                Annuler
+            </a>
+        </div>
+    </div>
+
+    <!-- Zone de progression (cachée par défaut) -->
+    <div id="progress-section" style="display: none;">
+        <div
+            style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin: 20px 0;">
+
+            <!-- Barre de progression -->
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span id="progress-label"
+                        style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem;">Démarrage...</span>
+                    <span id="progress-percent" style="color: #818cf8; font-weight: 700; font-size: 1.1rem;">0%</span>
+                </div>
+                <div style="width: 100%; background: #334155; border-radius: 8px; overflow: hidden; height: 24px;">
+                    <div id="progress-bar"
+                        style="width: 0%; background: linear-gradient(90deg, #6366f1, #818cf8); height: 100%; border-radius: 8px; transition: width 0.5s ease;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Détails -->
+            <div style="display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.85rem;">
+                <span id="progress-detail">En attente...</span>
+                <span id="progress-count">0 / 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone de succès (cachée par défaut) -->
+    <div id="success-section" style="display: none;">
+        <div
+            style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 12px; padding: 24px; margin: 20px 0;">
+            <h3 style="color: #22c55e; margin-top: 0;">✅ Calcul terminé !</h3>
+            <p id="success-message" style="color: #86efac; margin-bottom: 0;"></p>
+        </div>
+        <a href="/admin/" class="button" style="margin-top: 10px;">← Retour à l'admin</a>
+        <a href="/admin/core/matchscore/" class="button"
+            style="margin-left: 10px; background-color: #6366f1 !important;">📊 Voir les scores</a>
+    </div>
+
+    <!-- Zone d'erreur (cachée par défaut) -->
+    <div id="error-section" style="display: none;">
+        <div
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; padding: 24px; margin: 20px 0;">
+            <h3 style="color: #ef4444; margin-top: 0;">❌ Erreur</h3>
+            <p id="error-message" style="color: #fca5a5; margin-bottom: 0;"></p>
+        </div>
+        <a href="/admin/" class="button" style="margin-top: 10px;">← Retour à l'admin</a>
+    </div>
+</div>
+
+<script>
+    const csrfToken = '{{ csrf_token }}';
+    const startBtn = document.getElementById('start-btn');
+    const startSection = document.getElementById('start-section');
+    const progressSection = document.getElementById('progress-section');
+    const successSection = document.getElementById('success-section');
+    const errorSection = document.getElementById('error-section');
+
+    const progressBar = document.getElementById('progress-bar');
+    const progressLabel = document.getElementById('progress-label');
+    const progressPercent = document.getElementById('progress-percent');
+    const progressDetail = document.getElementById('progress-detail');
+    const progressCount = document.getElementById('progress-count');
+
+    let pollInterval = null;
+
+    startBtn.addEventListener('click', async () => {
+        // Masquer le bouton, afficher la progression
+        startSection.style.display = 'none';
+        progressSection.style.display = 'block';
+        progressLabel.textContent = 'Initialisation du moteur IA...';
+
+        try {
+            // Lancer le calcul
+            const response = await fetch('/admin/compute-scores/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                // Commencer à sonder la progression
+                pollInterval = setInterval(pollProgress, 800);
+            } else {
+                showError('Erreur lors du lancement du calcul');
+            }
+        } catch (err) {
+            showError(err.message);
+        }
+    });
+
+    async function pollProgress() {
+        try {
+            const response = await fetch('/admin/compute-scores/progress/');
+            const data = await response.json();
+
+            if (data.status === 'running' || data.status === 'starting') {
+                const total = data.total || 1;
+                const done = data.done || 0;
+                const percent = Math.round((done / total) * 100);
+
+                progressBar.style.width = percent + '%';
+                progressPercent.textContent = percent + '%';
+                progressCount.textContent = done + ' / ' + total;
+
+                if (data.status === 'starting') {
+                    progressLabel.textContent = 'Chargement du modèle IA...';
+                    progressDetail.textContent = 'Initialisation en cours...';
+                } else {
+                    progressLabel.textContent = 'Calcul en cours...';
+                    if (data.current_student && data.current_offer) {
+                        progressDetail.textContent = data.current_student + ' ↔ ' + data.current_offer;
+                    }
+                }
+            } else if (data.status === 'done') {
+                clearInterval(pollInterval);
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                progressCount.textContent = data.total + ' / ' + data.total;
+
+                setTimeout(() => {
+                    progressSection.style.display = 'none';
+                    successSection.style.display = 'block';
+                    document.getElementById('success-message').textContent =
+                        data.total + ' scores calculés avec succès !';
+                }, 500);
+            } else if (data.status === 'error') {
+                clearInterval(pollInterval);
+                showError(data.error || 'Erreur inconnue');
+            }
+        } catch (err) {
+            // Retry silently on network errors
+        }
+    }
+
+    function showError(msg) {
+        clearInterval(pollInterval);
+        progressSection.style.display = 'none';
+        startSection.style.display = 'none';
+        errorSection.style.display = 'block';
+        document.getElementById('error-message').textContent = msg;
+    }
+</script>
+{% endblock %}

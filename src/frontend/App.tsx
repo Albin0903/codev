@@ -15,6 +15,7 @@ import RegisterScreen from './pages/RegisterScreen';
 import ScheduleScreen from './pages/ScheduleScreen';
 import SwipeScreen from './pages/SwipeScreen';
 import PriorityScreen from './pages/PriorityScreen';
+import AdminScreen from './pages/AdminScreen';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = sessionStorage.getItem('jobfair_token');
@@ -25,29 +26,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Scroll to top on route change
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  
+
   return null;
 };
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  
+
   const hideNav = ['/match', '/login', '/register'].includes(location.pathname);
   const showNav = !hideNav;
 
   return (
     <div className="min-h-screen w-full flex flex-col relative font-display bg-[#0f172a]">
-      
+
       <BackgroundBlobs />
       <ScrollToTop />
-      
+
       {/* Top Navigation - Desktop only */}
       {showNav && <TopNavBar />}
-      
+
       {/* Main content - padding for nav bars */}
       <main
         className={`flex-1 relative z-10 w-full flex flex-col ${showNav ? 'pb-28 md:pb-0 md:pt-20' : ''}`}
@@ -92,6 +93,7 @@ const App: React.FC = () => {
             <Route path="/company/schedule" element={<ProtectedRoute><CompanyScheduleScreen /></ProtectedRoute>} />
             <Route path="/company/matches" element={<ProtectedRoute><CompanyMatchesScreen /></ProtectedRoute>} />
             <Route path="/priorities" element={<ProtectedRoute><PriorityScreen /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminScreen /></ProtectedRoute>} />
           </Routes>
         </Layout>
       </BottomNavProvider>

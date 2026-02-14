@@ -14,6 +14,7 @@ const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [uploadingCV, setUploadingCV] = useState(false);
+  const [analyzingCV, setAnalyzingCV] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
   const [cvExtractedData, setCvExtractedData] = useState<any>(null);
@@ -29,7 +30,7 @@ const ProfileScreen: React.FC = () => {
       try {
         const data = await api.getCurrentUser();
         setUserData(data);
-        
+
         // Extract first_name and last_name from username if not set
         let firstName = data?.user?.first_name || '';
         let lastName = data?.user?.last_name || '';
@@ -40,7 +41,7 @@ const ProfileScreen: React.FC = () => {
             lastName = lastName || parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
           }
         }
-        
+
         setFormData({
           first_name: firstName,
           last_name: lastName,
@@ -96,11 +97,25 @@ const ProfileScreen: React.FC = () => {
   const handleCVUpload = async (file: File) => {
     setUploadingCV(true);
     try {
+      // 1. D'abord on upload/sauvegarde le CV dans la DB
       const updated = await api.uploadCV(file);
       setUserData(updated);
-      if (updated.extracted_from_cv) {
-        setCvExtractedData(updated.extracted_from_cv);
+      setUploadingCV(false); // L'upload est fini
+      
+      // 2. Ensuite on lance l'analyse Gemini (IA)
+      setAnalyzingCV(true);
+      try {
+        const result = await api.extractCVData();
+        if (result.extracted_from_cv) {
+          setCvExtractedData(result.extracted_from_cv);
+          setShowCvImportModal(true);
+        }
+      } catch (extractErr) {
+        console.error("Erreur extraction IA:", extractErr);
+      } finally {
+        setAnalyzingCV(false);
       }
+      
     } catch (err: any) {
       setConfirmModal({
         show: true,
@@ -108,8 +123,8 @@ const ProfileScreen: React.FC = () => {
         message: err.message || 'Erreur lors de l\'upload du CV',
         onConfirm: () => setConfirmModal(null)
       });
-    } finally {
       setUploadingCV(false);
+    } finally {
       if (cvInputRef.current) cvInputRef.current.value = '';
     }
   };
@@ -155,19 +170,55 @@ const ProfileScreen: React.FC = () => {
     );
   }
 
-  const shortAbout = userData?.about?.length > 100 
-    ? userData.about.substring(0, 100) + '...' 
+  const shortAbout = userData?.about?.length > 100
+    ? userData.about.substring(0, 100) + '...'
     : userData?.about;
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0f172a] overflow-y-auto overflow-x-hidden pb-32 md:pt-24">
+      {/* AI Analyzing Indicator */}
+      {analyzingCV && (
+        <div className="fixed bottom-24 left-4 right-4 z-[100] md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md md:bottom-8 animate-slide-up">
+          <div className="relative overflow-hidden rounded-2xl bg-[#0f172a]/90 backdrop-blur-xl border border-pink-500/30 p-4 shadow-[0_10px_40px_-10px_rgba(236,72,153,0.3)] ring-1 ring-white/10">
+            {/* Background Gradient Pulse */}
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5"></div>
+            
+            <div className="relative flex items-center gap-4">
+              <div className="relative shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
+                <span className="material-symbols-outlined text-pink-400 text-2xl animate-spin">
+                  donut_large
+                </span>
+                <span className="absolute inset-0 rounded-full border border-pink-500/30 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-0.5">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-300">
+                    Analyse intelligente
+                  </span>
+                  <span className="material-symbols-outlined text-xs text-purple-400 animate-bounce">auto_awesome</span>
+                </h3>
+                <p className="text-slate-400 text-xs">
+                  Gemini lit votre CV pour compléter votre profil...
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Progress Line */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-800/50">
+               <div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 animate-progress origin-left"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="md:hidden">
         <AppHeader />
       </div>
 
       {/* Hidden file inputs */}
-      <input 
-        type="file" 
+      <input
+        type="file"
         ref={cvInputRef}
         accept=".pdf,.doc,.docx"
         className="hidden"
@@ -190,7 +241,7 @@ const ProfileScreen: React.FC = () => {
       {/* Profile Card */}
       <div className="px-4">
         <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden relative">
-          
+
           {/* Action Button - Inside Card */}
           <div className="absolute top-4 right-4 z-10">
             <button
@@ -227,7 +278,7 @@ const ProfileScreen: React.FC = () => {
               <span className="material-symbols-outlined text-lg">edit</span>
             </button>
           </div>
-          
+
           {/* Photo & Name */}
           <div className="p-6 flex items-center gap-4 border-b border-white/5">
             <div className="relative">
@@ -270,11 +321,10 @@ const ProfileScreen: React.FC = () => {
                     setUserData((prev: any) => ({ ...prev, photo_visible: !newValue }));
                   }
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                  userData?.photo_visible !== false
+                className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${userData?.photo_visible !== false
                     ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
                     : 'bg-slate-700/50 text-slate-400 border border-slate-600'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-sm">
                   {userData?.photo_visible !== false ? 'visibility' : 'visibility_off'}
@@ -284,34 +334,48 @@ const ProfileScreen: React.FC = () => {
             </div>
           )}
 
+          {/* Admin Access */}
+          {userData?.user?.is_staff && (
+            <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between bg-red-500/10">
+              <span className="text-red-400 text-xs md:text-sm font-bold">Administration</span>
+              <button
+                onClick={() => navigate('/admin')}
+                className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">settings</span>
+                Accéder
+              </button>
+            </div>
+          )}
+
           {/* Social Links - Highlighted */}
           {(userData?.linkedin_url || userData?.github_url || userData?.website_url) && (
             <div className="px-4 py-3 border-b border-white/5">
               <div className="flex flex-wrap gap-2">
                 {userData?.linkedin_url && (
-                  <a 
+                  <a
                     href={userData.linkedin_url}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 rounded-xl text-pink-400 text-xs md:text-sm transition-colors"
                   >
-                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                     LinkedIn
                   </a>
                 )}
                 {userData?.github_url && (
-                  <a 
+                  <a
                     href={userData.github_url}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-300 text-xs md:text-sm transition-colors"
                   >
-                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
                     GitHub
                   </a>
                 )}
                 {userData?.website_url && (
-                  <a 
+                  <a
                     href={userData.website_url}
                     target="_blank"
                     rel="noreferrer"
@@ -488,10 +552,10 @@ const ProfileScreen: React.FC = () => {
       <div className="px-4 mt-4">
         <div className="bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
           <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Curriculum Vitae</h3>
-          
+
           {userData?.cv_url ? (
             <div className="flex items-center gap-2">
-              <a 
+              <a
                 href={userData.cv_url}
                 target="_blank"
                 rel="noreferrer"
@@ -502,11 +566,13 @@ const ProfileScreen: React.FC = () => {
               </a>
               <button
                 onClick={() => cvInputRef.current?.click()}
-                disabled={uploadingCV}
+                disabled={uploadingCV || analyzingCV}
                 className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-400 transition-colors"
                 title="Remplacer"
               >
-                <span className="material-symbols-outlined">{uploadingCV ? 'hourglass_empty' : 'upload'}</span>
+                <span className="material-symbols-outlined">
+                  {uploadingCV || analyzingCV ? 'sync' : 'upload'}
+                </span>
               </button>
               <button
                 onClick={() => {
@@ -540,13 +606,18 @@ const ProfileScreen: React.FC = () => {
           ) : (
             <button
               onClick={() => cvInputRef.current?.click()}
-              disabled={uploadingCV}
+              disabled={uploadingCV || analyzingCV}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-pink-500 hover:bg-pink-600 rounded-xl text-white font-semibold transition-colors disabled:opacity-50"
             >
               {uploadingCV ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin">hourglass_empty</span>
+                  <span className="material-symbols-outlined animate-spin text-lg">sync</span>
                   Upload en cours...
+                </>
+              ) : analyzingCV ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-lg">auto_awesome</span>
+                  Analyse IA en cours...
                 </>
               ) : (
                 <>
@@ -566,7 +637,7 @@ const ProfileScreen: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               <span className="material-symbols-outlined text-pink-400">auto_awesome</span>
               <span className="text-pink-300 font-bold text-sm">CV analysé avec succès !</span>
-              <button 
+              <button
                 onClick={() => setCvExtractedData(null)}
                 className="ml-auto text-slate-400 hover:text-white"
               >
@@ -633,15 +704,14 @@ const ProfileScreen: React.FC = () => {
                     display = value.join(', ');
                   }
                 }
-                
+
                 return (
-                  <div 
+                  <div
                     key={field.key}
-                    className={`p-3 rounded-xl border ${
-                      hasValue 
-                        ? 'bg-pink-500/10 border-pink-500/30' 
+                    className={`p-3 rounded-xl border ${hasValue
+                        ? 'bg-pink-500/10 border-pink-500/30'
                         : 'bg-slate-700/30 border-slate-600/30'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`material-symbols-outlined text-sm ${hasValue ? 'text-pink-400' : 'text-slate-500'}`}>
@@ -699,13 +769,13 @@ const ProfileScreen: React.FC = () => {
             <h3 className="text-lg font-bold text-white mb-2">{confirmModal.title}</h3>
             <p className="text-slate-300 text-sm mb-6">{confirmModal.message}</p>
             <div className="flex gap-3 justify-end">
-              <button 
+              <button
                 onClick={() => setConfirmModal(null)}
                 className="px-4 py-2 rounded-lg bg-white/10 text-slate-300 font-medium hover:bg-white/20"
               >
                 Annuler
               </button>
-              <button 
+              <button
                 onClick={confirmModal.onConfirm}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600"
               >
@@ -721,7 +791,7 @@ const ProfileScreen: React.FC = () => {
       {editingProfile && createPortal(
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md h-[85vh] flex flex-col bg-slate-900 rounded-t-3xl border-t border-white/10 shadow-2xl overflow-hidden">
-            
+
             <div className="flex justify-between items-center p-4 border-b border-white/10 shrink-0">
               <h3 className="text-lg font-bold text-white">Modifier le profil</h3>
               <button onClick={() => setEditingProfile(false)} className="text-slate-400 hover:text-white">

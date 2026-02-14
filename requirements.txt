@@ -9,4 +9,8 @@ python-docx
 google-generativeai
 pandas
 openpyxl
+sentence-transformers
+scikit-learn
+numpy
+torch
 scipy

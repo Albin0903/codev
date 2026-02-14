@@ -23,6 +23,7 @@ urlpatterns = [
     path('me/', api_views.current_user, name='current-user'),
     path('me/finalize-plan/', api_views.finalize_priorities_and_plan, name='finalize-plan'),
     path('cv/', api_views.upload_cv, name='upload-cv'),
+    path('cv/extract/', api_views.extract_cv_data, name='extract-cv-data'),
     path('photo/', api_views.upload_photo, name='upload-photo'),
     # Forum
     path('forum/', api_views.get_forum, name='get-forum'),
@@ -33,6 +34,8 @@ urlpatterns = [
     path('company/interviews/', api_views_company.company_interviews, name='company-interviews'),
     # Admin
     path('reset-db/', api_views.reset_database, name='reset-db'),
+    path('reset-matches/', api_views.reset_matches, name='reset-matches'),
+    path('compute-scores/', api_views.compute_scores, name='compute-scores'),
     # Auth
     path('login/', csrf_exempt(api_views.login_view), name='login'),
     path('logout/', api_views.logout_view, name='logout'),
