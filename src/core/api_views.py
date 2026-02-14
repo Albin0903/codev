@@ -12,7 +12,7 @@ from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from datetime import timedelta
 from .models import Student, Company, Swipe, Match, Interview
-from .services import plan_student_interviews
+from .services import run_global_smart_matching
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 import random
@@ -185,29 +185,30 @@ class SwipeViewSet(viewsets.ModelViewSet):
         # Vérifier s'il y a match mutuel
         match_created = False
         is_mutual = False
+
+
         
         if direction == 'right':
             # Vérifier si l'entreprise a aussi liké cet étudiant
             company_liked = CompanySwipe.objects.filter(
-                company=company,
-                student=student,
-                direction='right'
+            company=company,
+            student=student,
+            direction='right'
             ).exists()
+        if company_liked:
+            # Match mutuel !
+            match, match_created = Match.objects.get_or_create(
+                student=student,
+                company=company,
+                defaults={'is_mutual': True}
+            )
+            if not match_created and not match.is_mutual:
+                match.is_mutual = True
+                match.save()
+            is_mutual = True
             
-            if company_liked:
-                # Match mutuel !
-                match, match_created = Match.objects.get_or_create(
-                    student=student,
-                    company=company,
-                    defaults={'is_mutual': True}
-                )
-                if not match_created and not match.is_mutual:
-                    match.is_mutual = True
-                    match.save()
-                is_mutual = True
-                
-                # Créer automatiquement un entretien
-                create_interview_for_match(match)
+            # Créer automatiquement un entretien
+            # create_interview_for_match(match)
         
         serializer = self.get_serializer(swipe)
         return Response({
@@ -643,15 +644,8 @@ def reset_database(request):
 
 @api_view(['POST'])
 def finalize_priorities_and_plan(request):
-    ordered_ids = request.data.get('ordered_ids', [])
-    student = request.user.student
-    
-    for rank, match_id in enumerate(ordered_ids, start=1):
-        Match.objects.filter(id=match_id, student=student).update(student_priority=rank)
-    
-    plan_student_interviews(student)
-    
-    return Response({"message": "Planning généré avec succès au milieu de journée !"})
+    run_global_smart_matching()
+    return Response({"status": "Planning global optimisé généré"})
 
 
 @api_view(['GET'])

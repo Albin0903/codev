@@ -355,49 +355,34 @@ class CustomAdminSite(admin.AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('reset-db/', self.admin_view(self.reset_db_view), name='reset-db'),
+            # Nouvelles routes pour l'organisation
+            path('close-swipes/', self.admin_view(self.close_swipes_view), name='close-swipes'),
+            path('generate-plannings/', self.admin_view(self.generate_plannings_view), name='generate-plannings'),
         ]
         return custom_urls + urls
     
-    def reset_db_view(self, request):
-        """Vue pour réinitialiser la base de données"""
-        from django.contrib import messages
-        if request.method == 'POST':
-            try:
-                # Réinitialisation complète: reset_db -> migrate -> flush -> nettoyer médias -> setup_demo
-                output = StringIO()
-                call_command('reset_db', '--force', stdout=output)
-                call_command('migrate', stdout=output)
-                call_command('flush', '--noinput', stdout=output)
-
-                # Nettoyage médias
-                import os, shutil
-                from django.conf import settings
-                media_root = getattr(settings, 'MEDIA_ROOT', None)
-                if media_root and os.path.isdir(media_root):
-                    for sub in ('cvs', 'photos', 'logos'):
-                        p = os.path.join(media_root, sub)
-                        try:
-                            if os.path.isdir(p):
-                                shutil.rmtree(p)
-                        except Exception:
-                            pass
-
-                # Setup démo
-                call_command('setup_demo', stdout=output)
-                
-                messages.success(request, '✅ Base et médias entièrement vidés. Démo réinstallée.')
-                return HttpResponseRedirect('/admin/')
-            except Exception as e:
-                messages.error(request, f'❌ Erreur: {str(e)}')
-                return HttpResponseRedirect('/admin/')
+    def close_swipes_view(self, request):
+        """Désactive la possibilité de swiper pour tout le monde"""
+        # Option 1: Utiliser le cache pour stocker l'état
+        from django.core.cache import cache
+        cache.set('swipes_enabled', False, None) # None = permanent
         
-        # Afficher un formulaire de confirmation
-        context = {
-            'title': 'Réinitialiser la base de données',
-            'opts': None,
-            'has_view_permission': True,
-        }
-        return TemplateResponse(request, 'admin/reset_db.html', context)
+        messages.success(request, '🚫 La phase de Swipes est désormais FERMÉE.')
+        return HttpResponseRedirect('/admin/')
+
+    def generate_plannings_view(self, request):
+        """Lance l'algorithme de matching biparti et anti-stress"""
+        from .services import run_global_smart_matching
+        try:
+            result = run_global_smart_matching()
+            if "error" in result:
+                messages.error(request, f"❌ Erreur : {result['error']}")
+            else:
+                messages.success(request, f"✅ Planning généré avec succès ({result['slots_count']} créneaux optimisés).")
+        except Exception as e:
+            messages.error(request, f"❌ Erreur critique : {str(e)}")
+            
+        return HttpResponseRedirect('/admin/')
 
 # Utiliser le site admin personnalisé
 admin.site.__class__ = CustomAdminSite

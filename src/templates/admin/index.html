@@ -272,14 +272,36 @@
 {{ block.super }}
 
 <div class="admin-tools-module">
-    <h2>🛠️ Outils d'administration</h2>
+    <h2>⚙️ Gestion du Cycle de Vie</h2>
     
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+        <form action="{% url 'admin:close-swipes' %}" method="post" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="danger-btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;">
+                🚫 Fermer la phase de Swipes
+            </button>
+        </form>
+
+        <form action="{% url 'admin:generate-plannings' %}" method="post" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="danger-btn" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important; box-shadow: 0 4px 12px rgba(13, 105, 242, 0.3) !important;">
+                🗓️ Lancer le Matching Global
+            </button>
+        </form>
+    </div>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 15px;">
+        L'algorithme biparti optimisera les rencontres et placera les priorités au milieu de la journée.
+    </p>
+
+    <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+
+    <h2>⚠️ Maintenance Système</h2>
     <div style="margin-top: 10px;">
         <a href="{% url 'admin:reset-db' %}" class="danger-btn">
             🔄 Réinitialiser la base de données
         </a>
         <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 10px 0 0 0;">
-            Supprime tous les matchs, swipes et entretiens (profils préservés)
+            Supprime tous les matchs, swipes et entretiens (profils préservés).
         </p>
     </div>
 </div>
