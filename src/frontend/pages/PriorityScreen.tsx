@@ -19,7 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { api } from '../services/api';
 import { AppHeader } from '../components/AppHeader';
 
-const SortableItem = ({ id, match, index }: { id: number, match: any, index: number }) => {
+const SortableItem = ({ id, match, index }: { id: number, match: any, index: number, key?: any }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   
   const style = {

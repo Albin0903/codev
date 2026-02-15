@@ -127,7 +127,7 @@ class MatchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Match
-        fields = ['id', 'student', 'company', 'is_mutual', 'created_at']
+        fields = ['id', 'student', 'company', 'is_mutual', 'student_priority','created_at']
 
 
 class InterviewSerializer(serializers.ModelSerializer):

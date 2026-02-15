@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.utils.text import slugify
 from django.utils.crypto import get_random_string
 from io import StringIO
+from django.core.cache import cache
 import pandas as pd
 
 from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer, MatchScore
@@ -452,17 +453,17 @@ class CustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, 'admin/reset_db.html', context)
     def close_swipes_view(self, request):
         """Désactive la possibilité de swiper pour tout le monde"""
-        # Option 1: Utiliser le cache pour stocker l'état
-        from django.core.cache import cache
-        cache.set('swipes_enabled', False, None) # None = permanent
         
-        messages.success(request, '🚫 La phase de Swipes est désormais FERMÉE.')
+        cache.set('swipes_enabled', False,None)
+        self.message_user(request, "Phase de Swipes fermée.")
         return HttpResponseRedirect('/admin/')
 
     def generate_plannings_view(self, request):
         """Lance l'algorithme de matching biparti et anti-stress"""
         from .services import run_global_smart_matching
         try:
+            cache.set('swipes_enabled', False,None)
+            messages.success(request, "Phase de Swipes fermée.")
             result = run_global_smart_matching()
             if "error" in result:
                 messages.error(request, f"❌ Erreur : {result['error']}")

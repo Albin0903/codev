@@ -350,7 +350,6 @@ export const api = {
         ordered_ids: orderedIds,
       }),
     });
-    
     if (!response.ok) throw new Error('Failed to finalize planning');
     return response.json();
   },
@@ -596,6 +595,24 @@ export const api = {
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || 'Failed to toggle photo visibility');
+    }
+    return response.json();
+  },
+
+  async getSystemStatus() {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Token ${token}`;
+    
+    const response = await fetch(`${API_BASE_URL}/system-status/`, {
+      method: 'GET',
+      credentials: token ? 'omit' : 'include',
+      headers,
+    });
+    
+    if (!response.ok) {
+      // En cas d'erreur, on autorise par défaut pour ne pas bloquer l'app
+      return { swipes_enabled: true };
     }
     return response.json();
   },

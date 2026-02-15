@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Installation des dépendances Python
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Copie du projet
 COPY ./src .
