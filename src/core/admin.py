@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.utils.text import slugify
 from django.utils.crypto import get_random_string
 from io import StringIO
+from django.core.cache import cache
 import pandas as pd
 
 from .models import Student, Skill, Company, Swipe, CompanySwipe, Match, Interview, InternshipOffer, MatchScore
@@ -399,6 +400,9 @@ class CustomAdminSite(admin.AdminSite):
             path('reset-matches/', self.admin_view(self.reset_matches_view), name='reset-matches'),
             path('compute-scores/', self.admin_view(self.compute_scores_view), name='compute-scores'),
             path('compute-scores/progress/', self.admin_view(self.compute_scores_progress), name='compute-scores-progress'),
+            # Nouvelles routes pour l'organisation
+            path('close-swipes/', self.admin_view(self.close_swipes_view), name='close-swipes'),
+            path('generate-plannings/', self.admin_view(self.generate_plannings_view), name='generate-plannings'),
         ]
         return custom_urls + urls
     
@@ -447,6 +451,28 @@ class CustomAdminSite(admin.AdminSite):
             'has_view_permission': True,
         }
         return TemplateResponse(request, 'admin/reset_db.html', context)
+    def close_swipes_view(self, request):
+        """Désactive la possibilité de swiper pour tout le monde"""
+        
+        cache.set('swipes_enabled', False,None)
+        self.message_user(request, "Phase de Swipes fermée.")
+        return HttpResponseRedirect('/admin/')
+
+    def generate_plannings_view(self, request):
+        """Lance l'algorithme de matching biparti et anti-stress"""
+        from .services import run_global_smart_matching
+        try:
+            cache.set('swipes_enabled', False,None)
+            messages.success(request, "Phase de Swipes fermée.")
+            result = run_global_smart_matching()
+            if "error" in result:
+                messages.error(request, f"❌ Erreur : {result['error']}")
+            else:
+                messages.success(request, f"✅ Planning généré avec succès ({result['slots_count']} créneaux optimisés).")
+        except Exception as e:
+            messages.error(request, f"❌ Erreur critique : {str(e)}")
+            
+        return HttpResponseRedirect('/admin/')
 
     def reset_matches_view(self, request):
         """Vue pour réinitialiser uniquement les matchs, swipes, entretiens et scores"""

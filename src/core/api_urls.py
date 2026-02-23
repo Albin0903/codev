@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from django.views.decorators.csrf import csrf_exempt
 from . import api_views
 from . import api_views_company
+from .api_views import get_system_status
 
 # Router pour les ViewSets
 router = DefaultRouter()
@@ -40,5 +41,7 @@ urlpatterns = [
     path('login/', csrf_exempt(api_views.login_view), name='login'),
     path('logout/', api_views.logout_view, name='logout'),
     path('register/', api_views.RegisterView.as_view(), name='register'),
+
+    path('system-status/', get_system_status, name='system-status'),
 ]
 

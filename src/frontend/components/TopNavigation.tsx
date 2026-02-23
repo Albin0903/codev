@@ -1,9 +1,26 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { api } from '../services/api'; // On importe l'api pour le logout
 
 export const TopNavigation: React.FC = () => {
   const navigate = useNavigate();
+
+const [swipesEnabled, setSwipesEnabled] = useState(true);
+
+useEffect(() => {
+  const checkStatus = async () => {
+    try {
+      const data = await api.getSystemStatus(); 
+      setSwipesEnabled(data.swipes_enabled);
+    } catch (error) {
+      console.error("Erreur statut :", error);
+    }
+  };
+  checkStatus();
+  // Optionnel : vérifier toutes les minutes pour un changement en direct
+  const interval = setInterval(checkStatus, 60000);
+  return () => clearInterval(interval);
+}, []);
   
   const userType = useMemo(() => {
     try { return sessionStorage.getItem('jobfair_user_type'); } catch { return null; }
@@ -16,12 +33,12 @@ export const TopNavigation: React.FC = () => {
 
   const navItems = userType === 'company'
     ? [
-        { path: '/company/swipe', icon: 'swipe', label: 'Découvrir' },
+        { path: '/company/swipe', icon: 'swipe', label: 'Découvrir', disabled: !swipesEnabled },
         { path: '/company/matches', icon: 'calendar_month', label: 'Planning', hasNotification: true },
         { path: '/company/profile', icon: 'business_center', label: 'Mon Profil' },
       ]
     : [
-        { path: '/swipe', icon: 'swipe', label: 'Découvrir' },
+        { path: '/swipe', icon: 'swipe', label: 'Découvrir', disabled: !swipesEnabled },
         { path: '/schedule', icon: 'calendar_month', label: 'Planning', hasNotification: true },
         { path: '/profile', icon: 'person', label: 'Mon Profil' },
       ];

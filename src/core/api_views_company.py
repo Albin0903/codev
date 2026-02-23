@@ -139,9 +139,6 @@ class CompanySwipeViewSet(viewsets.ModelViewSet):
                     match.is_mutual = True
                     match.save()
                 is_mutual = True
-                
-                # Créer automatiquement un entretien
-                create_interview_for_match(match)
         
         return Response({
             'swipe': {

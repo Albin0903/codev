@@ -4,7 +4,7 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-    /* JobFair Admin Theme - Modern Dark Style */
+    /* JobFair Admin Theme - Dark Premium */
     :root {
         --primary: #0d69f2;
         --primary-dark: #0a52c1;
@@ -28,8 +28,7 @@
         box-shadow: 0 4px 20px rgba(13, 105, 242, 0.3);
     }
 
-    #header h1,
-    #header a {
+    #header h1, #header a {
         color: white !important;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
@@ -55,14 +54,8 @@
         background: rgba(255, 255, 255, 0.25) !important;
     }
 
-    #container {
-        background: transparent !important;
-    }
-
-    #content {
-        padding: 30px !important;
-    }
-
+    #container { background: transparent !important; }
+    #content { padding: 30px !important; }
     #content h1 {
         color: var(--text-primary) !important;
         font-size: 2rem !important;
@@ -79,8 +72,7 @@
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
     }
 
-    .module caption,
-    .module h2 {
+    .module caption, .module h2 {
         background: linear-gradient(90deg, rgba(13, 105, 242, 0.2), rgba(236, 72, 153, 0.1)) !important;
         color: var(--primary) !important;
         padding: 15px 20px !important;
@@ -121,19 +113,13 @@
         color: var(--accent) !important;
     }
 
-    .addlink,
-    .changelink {
+    .addlink, .changelink {
         color: var(--text-secondary) !important;
         transition: color 0.2s ease !important;
     }
 
-    .addlink:hover {
-        color: #22c55e !important;
-    }
-
-    .changelink:hover {
-        color: var(--primary) !important;
-    }
+    .addlink:hover { color: #22c55e !important; }
+    .changelink:hover { color: var(--primary) !important; }
 
     /* Actions récentes */
     #recent-actions-module h2 {
@@ -161,14 +147,10 @@
         border: 1px solid var(--border) !important;
     }
 
-    .breadcrumbs a {
-        color: var(--primary) !important;
-    }
+    .breadcrumbs a { color: var(--primary) !important; }
 
-    /* Boutons et liens */
-    a.button,
-    input[type="submit"],
-    button[type="submit"] {
+    /* Boutons */
+    a.button, input[type="submit"], button[type="submit"] {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
         border: none !important;
         border-radius: 10px !important;
@@ -179,17 +161,12 @@
         transition: all 0.2s ease !important;
     }
 
-    a.button:hover,
-    input[type="submit"]:hover,
-    button[type="submit"]:hover {
+    a.button:hover, input[type="submit"]:hover, button[type="submit"]:hover {
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 16px rgba(13, 105, 242, 0.4) !important;
     }
 
-    /* Bouton danger */
-    .deletelink,
-    a.button.danger,
-    input[type="submit"].default {
+    .deletelink, a.button.danger {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
     }
@@ -204,9 +181,7 @@
     }
 
     /* Inputs */
-    input,
-    select,
-    textarea {
+    input, select, textarea {
         background: var(--bg-dark) !important;
         border: 1px solid var(--border) !important;
         border-radius: 8px !important;
@@ -214,9 +189,7 @@
         padding: 10px 14px !important;
     }
 
-    input:focus,
-    select:focus,
-    textarea:focus {
+    input:focus, select:focus, textarea:focus {
         border-color: var(--primary) !important;
         outline: none !important;
         box-shadow: 0 0 0 3px rgba(13, 105, 242, 0.2) !important;
@@ -242,7 +215,7 @@
         background: rgba(239, 68, 68, 0.1) !important;
     }
 
-    /* Outils d'admin personnalisés */
+    /* Admin Tools */
     .admin-tools-module {
         background: var(--bg-card) !important;
         border: 1px solid var(--border) !important;
@@ -264,7 +237,7 @@
 
     .admin-tools-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 16px;
     }
 
@@ -281,6 +254,9 @@
         position: relative !important;
         overflow: hidden !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
     }
 
     .admin-action-card:hover {
@@ -301,63 +277,59 @@
         flex-shrink: 0;
     }
 
-    .card-content {
-        flex: 1;
-    }
+    .card-content { flex: 1; }
+    .card-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+    .card-desc { font-size: 0.85rem; opacity: 0.9; line-height: 1.4; }
 
-    .card-title {
-        font-weight: 700;
-        font-size: 1.05rem;
-        margin-bottom: 4px;
-    }
+    .bg-indigo { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+    .bg-amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .bg-blue { background: linear-gradient(135deg, #0d69f2 0%, #0a52c1 100%); }
+    .bg-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
 
-    .card-desc {
-        font-size: 0.85rem;
-        opacity: 0.9;
-        line-height: 1.4;
-    }
-
-    .bg-indigo {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    }
-
-    .bg-amber {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    }
-
-    .bg-red {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
+    button.admin-action-card { border: none; font-family: inherit; }
 </style>
 {% endblock %}
 
 {% block content %}
 {{ block.super }}
 
-<div class="admin-tools-module" style="margin-top: 20px;">
-    <h2>🛠️ Outils d'administration</h2>
-
+<div class="admin-tools-module">
+    <h2>⚙️ Gestion du Cycle de Vie</h2>
     <div class="admin-tools-grid">
-        <!-- Compute Scores -->
+
+        <form action="{% url 'admin:generate-plannings' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="admin-action-card bg-blue">
+                <div class="card-icon">🗓️</div>
+                <div class="card-content">
+                    <div class="card-title">Matching Global</div>
+                    <div class="card-desc">Lancer l'algorithme Scipy pour optimiser tous les rendez-vous.</div>
+                </div>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="admin-tools-module">
+    <h2>🛠️ Outils de Maintenance</h2>
+    <div class="admin-tools-grid">
+
         <a href="{% url 'admin:compute-scores' %}" class="admin-action-card bg-indigo">
             <div class="card-icon">🧠</div>
             <div class="card-content">
                 <div class="card-title">Calculer les Scores IA</div>
-                <div class="card-desc">Pré-calculer les scores de matching pour tous les étudiants et offres.</div>
+                <div class="card-desc">Pré-calculer les scores de matching pour tous les profils et offres.</div>
             </div>
         </a>
 
-        <!-- Reset Matches -->
         <a href="{% url 'admin:reset-matches' %}" class="admin-action-card bg-amber">
             <div class="card-icon">🔄</div>
             <div class="card-content">
                 <div class="card-title">Réinitialiser les Matchs</div>
-                <div class="card-desc">Supprimer uniquement les interactions (swipes, matchs) et conserver les comptes.
-                </div>
+                <div class="card-desc">Supprimer les swipes, matchs et entretiens. Les comptes sont conservés.</div>
             </div>
         </a>
 
-        <!-- Reset DB -->
         <a href="{% url 'admin:reset-db' %}" class="admin-action-card bg-red">
             <div class="card-icon">💥</div>
             <div class="card-content">

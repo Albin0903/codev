@@ -12,9 +12,11 @@ from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from datetime import timedelta
 from .models import Student, Company, Swipe, Match, Interview
-from .services import plan_student_interviews
+from .services import run_global_smart_matching
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.db import transaction
 import random
 
 from .models import Student, Company, Swipe, CompanySwipe, Match, Interview, Skill, Forum
@@ -182,40 +184,30 @@ class SwipeViewSet(viewsets.ModelViewSet):
         try:
             student = request.user.student
         except Student.DoesNotExist:
-            return Response(
-                {'error': 'Student profile not found'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'Student profile not found'}, status=status.HTTP_400_BAD_REQUEST)
         
         company_id = request.data.get('company_id')
         direction = request.data.get('direction')
         
         if not company_id or not direction:
-            return Response(
-                {'error': 'company_id and direction are required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'company_id and direction are required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Validation: direction doit être 'left' ou 'right'
         if direction not in ['left', 'right']:
-            return Response(
-                {'error': 'direction must be "left" or "right"'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'direction must be "left" or "right"'}, status=status.HTTP_400_BAD_REQUEST)
         
         company = get_object_or_404(Company, id=company_id)
         
-        # Créer le swipe (un par student/company)
+        # 1. Créer le swipe
         swipe, created = Swipe.objects.get_or_create(
             student=student,
             company=company,
             defaults={'direction': direction}
         )
         
-        # Vérifier s'il y a match mutuel
         match_created = False
         is_mutual = False
-        
+
+        # 2. Logique de Match Mutuel (UNIQUEMENT si swipe à droite)
         if direction == 'right':
             # Vérifier si l'entreprise a aussi liké cet étudiant
             company_liked = CompanySwipe.objects.filter(
@@ -224,8 +216,8 @@ class SwipeViewSet(viewsets.ModelViewSet):
                 direction='right'
             ).exists()
             
+            # CETTE PARTIE DOIT ÊTRE INDENTÉE DANS LE "if direction == 'right'"
             if company_liked:
-                # Match mutuel !
                 match, match_created = Match.objects.get_or_create(
                     student=student,
                     company=company,
@@ -235,33 +227,26 @@ class SwipeViewSet(viewsets.ModelViewSet):
                     match.is_mutual = True
                     match.save()
                 is_mutual = True
-                
-                # Créer automatiquement un entretien
-                create_interview_for_match(match)
-        
+
         serializer = self.get_serializer(swipe)
         return Response({
             'swipe': serializer.data,
-            'match': match_created or is_mutual,
+            'match': is_mutual,
             'created': created
         }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-
+        
 
 class MatchViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint pour consulter les matchs
     """
     serializer_class = MatchSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
     
     def get_queryset(self):
-        try:
-            return Match.objects.filter(
-                student=self.request.user.student,
-                is_mutual=True
-            ).select_related('company', 'student__user').order_by('-created_at')
-        except Student.DoesNotExist:
-            return Match.objects.none()
+        student = self.request.user.student
+        # C'EST ICI QUE TOUT SE JOUE : on trie par priorité
+        return Match.objects.filter(student=student).order_by('student_priority')
 
 
 class InterviewViewSet(viewsets.ReadOnlyModelViewSet):
@@ -701,18 +686,32 @@ def reset_database(request):
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
+# Dans api_views.py
 @api_view(['POST'])
+@permission_classes([IsAuthenticated, IsStudent])
 def finalize_priorities_and_plan(request):
-    ordered_ids = request.data.get('ordered_ids', [])
-    student = request.user.student
-    
-    for rank, match_id in enumerate(ordered_ids, start=1):
-        Match.objects.filter(id=match_id, student=student).update(student_priority=rank)
-    
-    plan_student_interviews(student)
-    
-    return Response({"message": "Planning généré avec succès au milieu de journée !"})
+    """
+    Enregistre l'ordre de priorité des matchs pour l'étudiant.
+    """
+    try:
+        student = request.user.student
+        
+        ordered_match_ids = request.data.get('ordered_ids', [])
+
+        if not ordered_match_ids:
+            return Response({'error': 'Aucune donnée reçue'}, status=400)
+
+        with transaction.atomic():
+            for index, match_id in enumerate(ordered_match_ids):
+                Match.objects.filter(
+                    id=match_id, 
+                    student=student
+                ).update(student_priority=index + 1)
+
+        return Response({'message': 'Priorités enregistrées avec succès !'})
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['POST'])
@@ -769,4 +768,10 @@ def get_forum(request):
         'address': forum.address,
         'description': forum.description,
     })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_system_status(request):
+    is_enabled = cache.get('swipes_enabled', True)
+    return Response({'swipes_enabled': is_enabled})
 
