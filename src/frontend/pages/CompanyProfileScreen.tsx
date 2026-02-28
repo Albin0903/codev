@@ -51,25 +51,13 @@ const CompanyProfileScreen: React.FC = () => {
         }
         const data = await api.getCurrentCompany();
         setCompany(data);
-        
-        // Extract contact_name from username if not set (prenom.nom format)
-        let contactName = data?.contact_name || '';
-        if ((!contactName || contactName === 'À définir') && data?.user?.username) {
-          const parts = data.user.username.split('.');
-          if (parts.length >= 2) {
-            const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-            const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-            contactName = `${firstName} ${lastName}`;
-          }
-        }
-        
         setFormData({
           name: data?.name || '',
           sector: data?.sector || '',
           description: data?.description || '',
           website: data?.website || '',
           contact_email: data?.contact_email || '',
-          contact_name: contactName,
+          contact_name: data?.contact_name || '',
           address: data?.address || '',
           employees: data?.employees || '',
           founded_year: data?.founded_year || '',
