@@ -75,7 +75,6 @@ const ScheduleScreen: React.FC = () => {
       try {
         setLoading(true);
         
-        // Fetch forum info
         try {
           const forumData = await api.getForum();
           if (forumData) {
@@ -85,7 +84,6 @@ const ScheduleScreen: React.FC = () => {
           console.error('Error fetching forum:', e);
         }
         
-        // Fetch interviews
         const interviewsResponse = await api.getInterviews();
         const interviewsData = interviewsResponse.results || interviewsResponse;
         let formattedEvents: Event[] = [];
@@ -111,25 +109,20 @@ const ScheduleScreen: React.FC = () => {
           setEvents(formattedEvents);
         }
 
-        // Fetch matches - exclude companies that already have interviews
         const matchesResponse = await api.getMatches();
         const matchesData = matchesResponse.results || matchesResponse;
         let filteredMatches: MatchItem[] = [];
         
         if (Array.isArray(matchesData)) {
-          // Filter out companies that already have an interview
           filteredMatches = matchesData.filter((m: MatchItem) => !interviewCompanyIds.has(m.company.id));
           setMatches(filteredMatches);
         }
 
-        // Fetch swipes (likes history) - exclude those already matched OR with interviews
         try {
           const swipesResponse = await api.getSwipes();
           const swipesData = swipesResponse.results || swipesResponse;
           if (Array.isArray(swipesData)) {
-            // Get matched company IDs (including those filtered out from matches display)
             const allMatchedCompanyIds = new Set(matchesData.map((m: MatchItem) => m.company.id));
-            // Filter: only right swipes that are NOT in matches AND NOT in interviews
             setSwipes(swipesData.filter((s: SwipeItem) => 
               s.direction === 'right' && 
               !allMatchedCompanyIds.has(s.company.id) && 

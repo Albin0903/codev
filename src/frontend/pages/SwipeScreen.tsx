@@ -21,7 +21,6 @@ interface JobCard {
   founded_year?: number;
   linkedin_url?: string;
   contact_email?: string;
-  // Offer specific fields
   offerDuration?: string;
   offerLocation?: string;
   offerRequirements?: string;
@@ -35,7 +34,6 @@ const SwipeScreen: React.FC = () => {
   const navigate = useNavigate();
   const cardScrollRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll on this page
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -67,7 +65,6 @@ const SwipeScreen: React.FC = () => {
           linkedin_url: data.linkedin_url || '',
           contact_email: data.contact_email || '',
           // Offer specific fields
-          offerDuration: firstOffer?.duration || '',
           offerLocation: firstOffer?.location || '',
           offerRequirements: firstOffer?.requirements || '',
           offers: data.offers || [],

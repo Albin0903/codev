@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 
 
 class Student(models.Model):
-    """Modèle représentant un étudiant"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student')
     school = models.CharField(max_length=200, verbose_name="École", default="Polytech Lyon")
     school_url = models.URLField(blank=True, null=True, verbose_name="Site de l'école")
@@ -40,7 +39,6 @@ class Student(models.Model):
 
 
 class Skill(models.Model):
-    """Modèle représentant une compétence"""
     name = models.CharField(max_length=100, unique=True, verbose_name="Nom")
     students = models.ManyToManyField(Student, related_name='skills', blank=True)
 
@@ -79,7 +77,6 @@ class Company(models.Model):
 
 
 class InternshipOffer(models.Model):
-    """Offre de stage proposée par une entreprise"""
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='offers')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -119,7 +116,6 @@ class MatchScore(models.Model):
 
 
 class Swipe(models.Model):
-    """Modèle représentant un swipe (like/dislike) d'un ÉTUDIANT vers une ENTREPRISE"""
     DIRECTION_CHOICES = [
         ('right', 'Intéressé'),
         ('left', 'Pas intéressé'),
@@ -140,7 +136,6 @@ class Swipe(models.Model):
 
 
 class CompanySwipe(models.Model):
-    """Modèle représentant un swipe (like/dislike) d'une ENTREPRISE vers un ÉTUDIANT"""
     DIRECTION_CHOICES = [
         ('right', 'Intéressé'),
         ('left', 'Pas intéressé'),
@@ -161,12 +156,6 @@ class CompanySwipe(models.Model):
 
 
 class Match(models.Model):
-    """Modèle représentant un match mutuel entre étudiant et entreprise
-    
-    Un match est créé quand :
-    - L'étudiant a swiped right sur l'entreprise (Swipe)
-    - L'entreprise a swiped right sur l'étudiant (CompanySwipe)
-    """
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='matches')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='matches')
     is_mutual = models.BooleanField(default=False, verbose_name="Match mutuel")

@@ -1,7 +1,3 @@
-"""
-Utilitaire pour parser les CV et extraire les informations pertinentes.
-Supporte PDF et DOCX avec Google Gemini API.
-"""
 import os
 import json
 from typing import Dict, Optional
@@ -11,7 +7,6 @@ from docx import Document
 
 
 def extract_text_from_pdf(file_obj) -> str:
-    """Extrait le texte d'un fichier PDF"""
     try:
         text = ""
         with pdfplumber.open(file_obj) as pdf:
@@ -26,7 +21,6 @@ def extract_text_from_pdf(file_obj) -> str:
 
 
 def extract_text_from_docx(file_obj) -> str:
-    """Extrait le texte d'un fichier DOCX"""
     try:
         doc = Document(file_obj)
         text = ""
@@ -39,7 +33,6 @@ def extract_text_from_docx(file_obj) -> str:
 
 
 def initialize_gemini():
-    """Initialise le client Gemini avec la clé API"""
     api_key = os.getenv('GOOGLE_AI_API_KEY')
     if not api_key:
         raise ValueError("GOOGLE_AI_API_KEY non définie dans les variables d'environnement")
@@ -48,36 +41,8 @@ def initialize_gemini():
 
 
 def parse_cv(file_obj, content_type: str) -> Dict:
-    """
-    Parse un CV avec Gemini et retourne les informations extraites.
-    
-    Args:
-        file_obj: Fichier uploadé (InMemoryUploadedFile ou similaire)
-        content_type: Type MIME du fichier
-    
-    Returns:
-        Dict avec les champs extraits:
-        - first_name: Prénom
-        - last_name: Nom de famille
-        - email: Adresse email
-        - phone: Numéro de téléphone
-        - linkedin_url: URL LinkedIn
-        - github_url: URL GitHub
-        - website_url: URL du site personnel
-        - location: Ville/région
-        - about: Résumé/Bio
-        - availability: Disponibilité
-        - duration: Durée
-        - languages: Liste structurée des langues
-        - skills: List de compétences techniques
-        - hobbies: Liste des loisirs
-        - education: Liste structurée des formations
-        - experience: Liste structurée des expériences
-    """
-    # Lire le contenu du fichier
     file_obj.seek(0)
     
-    # Extraire le texte selon le type
     if 'pdf' in content_type:
         text = extract_text_from_pdf(file_obj)
     elif 'word' in content_type or 'docx' in content_type:
@@ -89,10 +54,8 @@ def parse_cv(file_obj, content_type: str) -> Dict:
         return {}
     
     try:
-        # Initialiser Gemini
         model = initialize_gemini()
         
-        # Prompt pour extraire les infos du CV
         prompt = f"""Extrait les informations suivantes d'un CV et retourne le résultat au format JSON.
 Retourne UNIQUEMENT du JSON valide, sans autre texte.
 
@@ -130,7 +93,6 @@ Réponse JSON:"""
         response = model.generate_content(prompt)
         response_text = response.text.strip()
         
-        # Nettoyer si le modèle a mis du texte avant/après le JSON
         if '{' in response_text:
             start_idx = response_text.index('{')
             response_text = response_text[start_idx:]
@@ -138,10 +100,8 @@ Réponse JSON:"""
         if response_text.endswith('```'):
             response_text = response_text[:-3].rstrip()
         
-        # Parser la réponse JSON
         result = json.loads(response_text)
         
-        # Nettoyer les valeurs vides et null
         cleaned_result = {}
         for key, value in result.items():
             if value is not None and value != '' and value != []:

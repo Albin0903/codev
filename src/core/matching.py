@@ -4,15 +4,6 @@ from .semantic_engine import MatchingEngine
 
 
 def calculate_skills_match_score(student_skills: List[str], offer_text: str) -> float:
-    """
-    Calcule un score de correspondance directe entre les compétences
-    de l'étudiant et le texte de l'offre (titre + description + requirements).
-    
-    Utilise un matching insensible à la casse avec gestion des variantes
-    courantes (ex: "React.js" matche "React", "C/C++" matche "C++").
-    
-    Returns: float entre 0.0 et 1.0
-    """
     if not student_skills or not offer_text:
         return 0.0
     
@@ -24,18 +15,14 @@ def calculate_skills_match_score(student_skills: List[str], offer_text: str) -> 
         if not skill_lower:
             continue
         
-        # Match direct
         if skill_lower in offer_lower:
             matched += 1
             continue
         
-        # Variantes courantes (React.js -> react, Vue.js -> vue, etc.)
         variants = [skill_lower]
-        # Retirer .js, .NET etc. pour un match plus large
         clean = re.sub(r'\.(js|ts|net|py)$', '', skill_lower, flags=re.IGNORECASE)
         if clean != skill_lower:
             variants.append(clean)
-        # Retirer les slashs (C/C++ -> C, C++)
         if '/' in skill_lower:
             variants.extend(skill_lower.split('/'))
         
@@ -43,29 +30,16 @@ def calculate_skills_match_score(student_skills: List[str], offer_text: str) -> 
             matched += 1
             continue
         
-        # Match partiel avec mots-clés de l'offre (au moins 4 chars pour éviter faux positifs)
         if len(skill_lower) >= 4:
-            # Vérifier si le skill est un sous-mot d'un mot de l'offre
             offer_words = re.findall(r'[a-zà-ÿ0-9+#.]+', offer_lower)
             if any(skill_lower in w or w in skill_lower for w in offer_words if len(w) >= 4):
-                matched += 0.5  # Demi-point pour match partiel
+                matched += 0.5
     
-    # Normaliser : ratio de skills matchés, plafonné à 1.0
-    # On ne pénalise pas si l'étudiant a beaucoup de skills non-pertinentes
-    # On utilise min(len(student_skills), 5) comme dénominateur pour ne pas
-    # diluer le score quand l'étudiant a 20+ compétences
     denominator = min(len(student_skills), 8)
     return min(1.0, matched / denominator)
 
 
 def calculate_experience_match_score(student, offer) -> float:
-    """
-    Bonus si l'étudiant a une expérience dans un domaine similaire au poste.
-    Compare les intitulés de postes et descriptions des expériences
-    avec le titre et la description de l'offre.
-    
-    Returns: float entre 0.0 et 1.0
-    """
     if not student.experience:
         return 0.0
     

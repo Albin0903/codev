@@ -65,13 +65,12 @@ def create_interview_for_match(match):
     return interview
 
 class RegisterView(APIView):
-    permission_classes = [AllowAny] # Important : permet l'accès sans être connecté
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         
         if serializer.is_valid():
-            # 1. Création de l'User Django standard
             user = User.objects.create_user(
                 username=serializer.validated_data['username'],
                 email=serializer.validated_data['email'],
@@ -82,7 +81,6 @@ class RegisterView(APIView):
             
             user_type = serializer.validated_data['user_type']
 
-            # 2. Création du profil associé (Student ou Company)
             if user_type == 'student':
                 Student.objects.create(
                     user=user,
@@ -197,7 +195,6 @@ class SwipeViewSet(viewsets.ModelViewSet):
         
         company = get_object_or_404(Company, id=company_id)
         
-        # 1. Créer le swipe
         swipe, created = Swipe.objects.get_or_create(
             student=student,
             company=company,
@@ -427,25 +424,24 @@ def login_view(request):
     
     if user is not None:
         login(request, user)
-        # create or get token
         token, _ = Token.objects.get_or_create(user=user)
         
-        # Détecter le type d'utilisateur
         user_type = None
         profile_data = {}
         
-        # Vérifier si c'est une entreprise
-        try:
-            company = user.company
+        # Tentative d'identification du profil
+        if hasattr(user, 'company'):
             from .serializers import CompanySerializer
-            serializer = CompanySerializer(company, context={'request': request})
+            serializer = CompanySerializer(user.company, context={'request': request})
             profile_data = serializer.data
             user_type = 'company'
-        except Company.DoesNotExist:
-            pass
-        
-        # Sinon, c'est un étudiant (ou on en crée un)
-        if user_type is None:
+        elif hasattr(user, 'student'):
+            from .serializers import StudentSerializer
+            serializer = StudentSerializer(user.student, context={'request': request})
+            profile_data = serializer.data
+            user_type = 'student'
+        else:
+            # Cas de secours: profil manquant (ex: admin ou inscription buggée)
             student, created = Student.objects.get_or_create(
                 user=user,
                 defaults={
@@ -459,10 +455,9 @@ def login_view(request):
             profile_data = serializer.data
             user_type = 'student'
         
-        # Retourner les infos avec le type d'utilisateur
         response_data = profile_data
         response_data['token'] = token.key
-        response_data['user_type'] = user_type  # 'student' ou 'company'
+        response_data['user_type'] = user_type
         
         return Response(response_data)
     else:

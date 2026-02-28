@@ -32,7 +32,7 @@ const CompanyProfileScreen: React.FC = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Offer management state
+  // État de la gestion des offres
   const [offerModalOpen, setOfferModalOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any>(null);
   const [offerForm, setOfferForm] = useState<OfferFormData>(emptyOfferForm);
@@ -100,7 +100,7 @@ const CompanyProfileScreen: React.FC = () => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // Offer CRUD handlers
+  // Gestionnaires du CRUD des offres
   const openAddOfferModal = () => {
     setEditingOffer(null);
     setOfferForm(emptyOfferForm);
@@ -133,11 +133,11 @@ const CompanyProfileScreen: React.FC = () => {
     setSavingOffer(true);
     try {
       if (editingOffer) {
-        // Update existing offer
+        // Mise à jour d'une offre existante
         const updated = await api.updateCompanyOffer(editingOffer.id, offerForm);
         setOffers(offers.map(o => o.id === updated.id ? updated : o));
       } else {
-        // Create new offer
+        // Création d'une nouvelle offre
         const created = await api.createCompanyOffer(offerForm);
         setOffers([created, ...offers]);
       }
@@ -172,7 +172,7 @@ const CompanyProfileScreen: React.FC = () => {
     }
   };
 
-  // Lock body scroll when editing modal is open
+  // Verrouiller le défilement du corps de la page lors de l'ouverture d'une modale
   useEffect(() => {
     if (editing || offerModalOpen || deleteConfirmOffer) {
       document.body.style.overflow = 'hidden';
@@ -216,11 +216,11 @@ const CompanyProfileScreen: React.FC = () => {
         <AppHeader />
       </div>
 
-      {/* Profile Card */}
+      {/* Carte du profil */}
       <div className="px-4">
         <div className="bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden relative">
           
-          {/* Edit Button - Inside Card */}
+          {/* Bouton Modifier - À l'intérieur de la carte */}
           <button
             onClick={() => setEditing(true)}
             className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
@@ -228,7 +228,7 @@ const CompanyProfileScreen: React.FC = () => {
             <span className="material-symbols-outlined text-lg">edit</span>
           </button>
           
-          {/* Logo & Company Name */}
+          {/* Logo & Nom de l'entreprise */}
           <div className="p-6 flex items-center gap-4 border-b border-white/5">
             <div className="relative">
               {company?.logo_url ? (
@@ -266,7 +266,7 @@ const CompanyProfileScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Statistiques rapides */}
           <div className="grid grid-cols-3 border-b border-white/5">
             <div className="p-4 text-center border-r border-white/5">
               <p className="text-white text-xl md:text-2xl font-bold">{company?.employees || '-'}</p>
@@ -297,7 +297,7 @@ const CompanyProfileScreen: React.FC = () => {
             </p>
           </div>
 
-          {/* Contact Info */}
+          {/* Infos de contact */}
           <div className="p-4 border-b border-white/5">
             <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Contact</h3>
             <div className="space-y-2">
@@ -327,7 +327,7 @@ const CompanyProfileScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Benefits */}
+          {/* Avantages */}
           {company?.benefits && (
             <div className="p-4 border-b border-white/5">
               <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Avantages</h3>
@@ -336,7 +336,7 @@ const CompanyProfileScreen: React.FC = () => {
           )}
         </div>
 
-        {/* Active Offers */}
+        {/* Offres actives */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-bold md:text-lg">Offres actives ({offers.length})</h2>
@@ -399,11 +399,11 @@ const CompanyProfileScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Modale d'édition */}
       {editing && createPortal(
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md h-[85vh] bg-slate-900 rounded-t-3xl border-t border-white/10 flex flex-col overflow-hidden">
-            {/* Header */}
+            {/* En-tête */}
             <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
               <h3 className="text-white font-bold text-lg md:text-xl">Modifier le profil</h3>
               <button onClick={() => setEditing(false)} className="text-slate-400 hover:text-white">
@@ -411,7 +411,7 @@ const CompanyProfileScreen: React.FC = () => {
               </button>
             </div>
             
-            {/* Form */}
+            {/* Formulaire */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Nom de l'entreprise</label>
@@ -508,7 +508,7 @@ const CompanyProfileScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Pied de page */}
             <div className="p-4 border-t border-white/10 shrink-0">
               <button
                 onClick={handleSave}
@@ -522,11 +522,11 @@ const CompanyProfileScreen: React.FC = () => {
         document.body
       )}
 
-      {/* Offer Modal (Add/Edit) */}
+      {/* Modale d'offre (Ajout/Édition) */}
       {offerModalOpen && createPortal(
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md h-[85vh] bg-slate-900 rounded-t-3xl border-t border-white/10 flex flex-col overflow-hidden">
-            {/* Header */}
+            {/* En-tête */}
             <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
               <h3 className="text-white font-bold text-lg md:text-xl">
                 {editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre'}
@@ -536,7 +536,7 @@ const CompanyProfileScreen: React.FC = () => {
               </button>
             </div>
             
-            {/* Form */}
+            {/* Formulaire */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Titre de l'offre *</label>
@@ -591,7 +591,7 @@ const CompanyProfileScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Pied de page */}
             <div className="p-4 border-t border-white/10 shrink-0 flex gap-3">
               <button
                 onClick={closeOfferModal}
@@ -619,18 +619,18 @@ const CompanyProfileScreen: React.FC = () => {
         document.body
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Modale de confirmation de suppression */}
       {deleteConfirmOffer && createPortal(
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-slate-900 rounded-2xl border border-white/10 overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            {/* Icon */}
+            {/* Icône */}
             <div className="pt-6 pb-2 flex justify-center">
               <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-red-400 text-3xl">delete_forever</span>
               </div>
             </div>
             
-            {/* Content */}
+            {/* Contenu */}
             <div className="px-6 pb-4 text-center">
               <h3 className="text-white font-bold text-lg mb-2">Supprimer cette offre ?</h3>
               <p className="text-slate-400 text-sm mb-1">
@@ -641,7 +641,7 @@ const CompanyProfileScreen: React.FC = () => {
               </p>
             </div>
             
-            {/* Buttons */}
+            {/* Boutons */}
             <div className="p-4 border-t border-white/10 flex gap-3">
               <button
                 onClick={closeDeleteConfirm}

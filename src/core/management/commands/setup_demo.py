@@ -261,11 +261,10 @@ class Command(BaseCommand):
                 company_user.save()
                 self.stdout.write(self.style.SUCCESS(f'  ✓ User créé: {company_data["username"]}'))
             
-            # Créer l'entreprise
+            # Créer l'entreprise (Note: Le champ User a été supprimé du modèle Company)
             company, created = Company.objects.get_or_create(
                 name=company_data['name'],
                 defaults={
-                    'user': company_user,
                     'sector': company_data['sector'],
                     'description': company_data['description'],
                     'website': company_data['website'],
@@ -277,9 +276,6 @@ class Command(BaseCommand):
                     'benefits': company_data.get('benefits', ''),
                 }
             )
-            if not created and not company.user:
-                company.user = company_user
-                company.save()
             
             companies.append(company)
             if created:
