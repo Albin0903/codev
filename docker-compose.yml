@@ -5,9 +5,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=forum_db
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password_secret
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     restart: always
 
   # Service Django
@@ -21,12 +21,12 @@ services:
     depends_on:
       - db
     environment:
-      - DB_NAME=forum_db
-      - DB_USER=admin
-      - DB_PASSWORD=password_secret
-      - DB_HOST=db  # Le nom du service ci-dessus
-      - DB_PORT=5432
-      - GOOGLE_AI_API_KEY=AIzaSyCqK4z7IWsHQACwVvjdlIb1mnMlvfUG3pw
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}  # Le nom du service ci-dessus
+      - DB_PORT=${DB_PORT}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
 
 volumes:
   postgres_data: # Pour ne pas perdre les données quand on éteint Docker
